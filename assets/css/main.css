@@ -1,0 +1,48 @@
+body,
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea,
+select,
+.btn,
+button {
+  font-family: 'Maven Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.card {
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  box-shadow: 0px 1px 3px 0px #999;
+  padding: 8px 16px;
+}
+
+/*
+ * CARDS
+ */
+.card-title,
+.card-content,
+.card-actions {
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 1em;
+}
+.card-title h3 {
+  margin-top: 8px;
+}
+.card-title img {
+  height: 175px;
+  object-fit: cover;
+  width: 100%;
+}
+
+/*
+ * PAGE PROPERTIES
+ */
+.page-heading {
+  border-bottom: 1px solid #ddd;
+}
