@@ -4,6 +4,8 @@
   "description": "The client-side for the recipes sample application.",
   "main": "assets/js/app.js",
   "scripts": {
+    "build": "browserify app/main.js -o assets/js/app.js",
+    "dev": "watchify app/main.js -d -o assets/js/app.js -v",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
