@@ -6,6 +6,7 @@
   "scripts": {
     "build": "browserify app/main.js -o assets/js/app.js",
     "dev": "watchify app/main.js -d -o assets/js/app.js -v",
+    "start": "static -p 9000 .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,7 +20,9 @@
   },
   "homepage": "https://github.com/adamsea/recipes-client#readme",
   "dependencies": {
+    "es6-promise": "^3.0.2",
     "lodash": "^4.6.1",
-    "lodash-migrate": "^0.2.11"
+    "lodash-migrate": "^0.2.11",
+    "whatwg-fetch": "^0.10.1"
   }
 }
