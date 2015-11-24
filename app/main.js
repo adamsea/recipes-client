@@ -1,6 +1,6 @@
 // Let's include Lodash here.
-var RecipeCard = require('./components/recipes/card');
-var card = new RecipeCard({
+var RecipeList = require('./components/recipes/list');
+var list = new RecipeList({
   el: '.recipe-list'
 });
-card.render();
+list.render();
