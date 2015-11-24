@@ -1,6 +1,6 @@
 // Let's include Lodash here.
-var each = require('lodash/each');
-
-each(['Tom', 'Bill', 'Susan', 'Jeanie'], function(name) {
-	console.log('Hi there, ' + name + '!');
+var RecipeCard = require('./components/recipes/card');
+var card = new RecipeCard({
+  el: '.recipe-list'
 });
+card.render();
