@@ -54,7 +54,7 @@ BaseComponent.prototype.render = function(data) {
 };
 
 module.exports = BaseComponent;
-},{"lodash/template":54}],2:[function(require,module,exports){
+},{"lodash/template":65}],2:[function(require,module,exports){
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
 
@@ -94,17 +94,59 @@ RecipeCard.prototype.render = function(data) {
 };
 
 module.exports = RecipeCard;
-},{"../../base":1,"./template.html":3,"lodash/create":37}],3:[function(require,module,exports){
+},{"../../base":1,"./template.html":3,"lodash/create":45}],3:[function(require,module,exports){
 module.exports = "<div class=\"card recipe-card\">\n  <div class=\"card-title\">\n    <h3><%= title %></h3>\n  </div>\n\n  <div class=\"card-content\">\n    <p><%- description %></p>\n    <p class=\"small\">posted by <%= user.username %></p>\n  </div>\n</div>";
 
 },{}],4:[function(require,module,exports){
+var BaseComponent = require('../../base');
+var RecipeCard = require('../card');
+var create = require('lodash/create');
+var forEach = require('lodash/each');
+
+//
+// Constructor for the recipe list
+//
+function RecipeList(config) {
+  BaseComponent.call(this, config);
+}
+
+//
+// Inherit from the BaseComponent
+//
+RecipeList.prototype = create(BaseComponent.prototype, {
+  constructor: RecipeList
+});
+
+//
+// Override the render() method
+// This will fetch the recipe list and render each
+// recipe in the list to a RecipeCard component.
+//
+RecipeList.prototype.render = function() {
+  window.fetch('http://127.0.0.1:3000/recipes?_expand=user')
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(recipes) {
+      forEach(recipes, function(recipe) {
+        var card = new RecipeCard({
+          el: document.createElement('div')
+        });
+        card.render(recipe);
+        this.append(card.el);
+      }.bind(this));
+    }.bind(this));
+};
+
+module.exports = RecipeList;
+},{"../../base":1,"../card":2,"lodash/create":45,"lodash/each":46}],5:[function(require,module,exports){
 // Let's include Lodash here.
-var RecipeCard = require('./components/recipes/card');
-var card = new RecipeCard({
+var RecipeList = require('./components/recipes/list');
+var list = new RecipeList({
   el: '.recipe-list'
 });
-card.render();
-},{"./components/recipes/card":2}],5:[function(require,module,exports){
+list.render();
+},{"./components/recipes/list":4}],6:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -112,7 +154,7 @@ var Reflect = root.Reflect;
 
 module.exports = Reflect;
 
-},{"./_root":34}],6:[function(require,module,exports){
+},{"./_root":42}],7:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -120,7 +162,7 @@ var Symbol = root.Symbol;
 
 module.exports = Symbol;
 
-},{"./_root":34}],7:[function(require,module,exports){
+},{"./_root":42}],8:[function(require,module,exports){
 /**
  * A faster alternative to `Function#apply`, this function invokes `func`
  * with the `this` binding of `thisArg` and the arguments of `args`.
@@ -144,7 +186,31 @@ function apply(func, thisArg, args) {
 
 module.exports = apply;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
+/**
+ * A specialized version of `_.forEach` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns `array`.
+ */
+function arrayEach(array, iteratee) {
+  var index = -1,
+      length = array.length;
+
+  while (++index < length) {
+    if (iteratee(array[index], index, array) === false) {
+      break;
+    }
+  }
+  return array;
+}
+
+module.exports = arrayEach;
+
+},{}],10:[function(require,module,exports){
 /**
  * A specialized version of `_.map` for arrays without support for iteratee
  * shorthands.
@@ -167,7 +233,7 @@ function arrayMap(array, iteratee) {
 
 module.exports = arrayMap;
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var eq = require('./eq');
 
 /** Used for built-in method references. */
@@ -196,7 +262,7 @@ function assignInDefaults(objValue, srcValue, key, object) {
 
 module.exports = assignInDefaults;
 
-},{"./eq":38}],10:[function(require,module,exports){
+},{"./eq":47}],12:[function(require,module,exports){
 var eq = require('./eq');
 
 /** Used for built-in method references. */
@@ -225,7 +291,7 @@ function assignValue(object, key, value) {
 
 module.exports = assignValue;
 
-},{"./eq":38}],11:[function(require,module,exports){
+},{"./eq":47}],13:[function(require,module,exports){
 var copyObject = require('./_copyObject'),
     keys = require('./keys');
 
@@ -244,7 +310,23 @@ function baseAssign(object, source) {
 
 module.exports = baseAssign;
 
-},{"./_copyObject":20,"./keys":51}],12:[function(require,module,exports){
+},{"./_copyObject":26,"./keys":62}],14:[function(require,module,exports){
+var identity = require('./identity');
+
+/**
+ * Casts `value` to `identity` if it's not a function.
+ *
+ * @private
+ * @param {*} value The value to inspect.
+ * @returns {Array} Returns the array-like object.
+ */
+function baseCastFunction(value) {
+  return typeof value == 'function' ? value : identity;
+}
+
+module.exports = baseCastFunction;
+
+},{"./identity":50}],15:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /** Built-in value references. */
@@ -264,7 +346,60 @@ function baseCreate(proto) {
 
 module.exports = baseCreate;
 
-},{"./isObject":47}],13:[function(require,module,exports){
+},{"./isObject":58}],16:[function(require,module,exports){
+var baseForOwn = require('./_baseForOwn'),
+    createBaseEach = require('./_createBaseEach');
+
+/**
+ * The base implementation of `_.forEach` without support for iteratee shorthands.
+ *
+ * @private
+ * @param {Array|Object} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array|Object} Returns `collection`.
+ */
+var baseEach = createBaseEach(baseForOwn);
+
+module.exports = baseEach;
+
+},{"./_baseForOwn":18,"./_createBaseEach":29}],17:[function(require,module,exports){
+var createBaseFor = require('./_createBaseFor');
+
+/**
+ * The base implementation of `baseForIn` and `baseForOwn` which iterates
+ * over `object` properties returned by `keysFunc` invoking `iteratee` for
+ * each property. Iteratee functions may exit iteration early by explicitly
+ * returning `false`.
+ *
+ * @private
+ * @param {Object} object The object to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {Function} keysFunc The function to get the keys of `object`.
+ * @returns {Object} Returns `object`.
+ */
+var baseFor = createBaseFor();
+
+module.exports = baseFor;
+
+},{"./_createBaseFor":30}],18:[function(require,module,exports){
+var baseFor = require('./_baseFor'),
+    keys = require('./keys');
+
+/**
+ * The base implementation of `_.forOwn` without support for iteratee shorthands.
+ *
+ * @private
+ * @param {Object} object The object to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Object} Returns `object`.
+ */
+function baseForOwn(object, iteratee) {
+  return object && baseFor(object, iteratee, keys);
+}
+
+module.exports = baseForOwn;
+
+},{"./_baseFor":17,"./keys":62}],19:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -292,7 +427,7 @@ function baseHas(object, key) {
 
 module.exports = baseHas;
 
-},{}],14:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /* Built-in method references for those with the same name as other `lodash` methods. */
 var nativeKeys = Object.keys;
 
@@ -310,7 +445,7 @@ function baseKeys(object) {
 
 module.exports = baseKeys;
 
-},{}],15:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 var Reflect = require('./_Reflect'),
     iteratorToArray = require('./_iteratorToArray');
 
@@ -348,7 +483,7 @@ if (enumerate && !propertyIsEnumerable.call({ 'valueOf': 1 }, 'valueOf')) {
 
 module.exports = baseKeysIn;
 
-},{"./_Reflect":5,"./_iteratorToArray":30}],16:[function(require,module,exports){
+},{"./_Reflect":6,"./_iteratorToArray":38}],22:[function(require,module,exports){
 /**
  * The base implementation of `_.property` without support for deep paths.
  *
@@ -364,7 +499,7 @@ function baseProperty(key) {
 
 module.exports = baseProperty;
 
-},{}],17:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * The base implementation of `_.times` without support for iteratee shorthands
  * or max array length checks.
@@ -386,7 +521,7 @@ function baseTimes(n, iteratee) {
 
 module.exports = baseTimes;
 
-},{}],18:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var arrayMap = require('./_arrayMap');
 
 /**
@@ -407,7 +542,7 @@ function baseValues(object, props) {
 
 module.exports = baseValues;
 
-},{"./_arrayMap":8}],19:[function(require,module,exports){
+},{"./_arrayMap":10}],25:[function(require,module,exports){
 /**
  * Checks if `value` is a global object.
  *
@@ -421,7 +556,7 @@ function checkGlobal(value) {
 
 module.exports = checkGlobal;
 
-},{}],20:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var copyObjectWith = require('./_copyObjectWith');
 
 /**
@@ -439,7 +574,7 @@ function copyObject(source, props, object) {
 
 module.exports = copyObject;
 
-},{"./_copyObjectWith":21}],21:[function(require,module,exports){
+},{"./_copyObjectWith":27}],27:[function(require,module,exports){
 var assignValue = require('./_assignValue');
 
 /**
@@ -473,7 +608,7 @@ function copyObjectWith(source, props, object, customizer) {
 
 module.exports = copyObjectWith;
 
-},{"./_assignValue":10}],22:[function(require,module,exports){
+},{"./_assignValue":12}],28:[function(require,module,exports){
 var isIterateeCall = require('./_isIterateeCall'),
     rest = require('./rest');
 
@@ -512,7 +647,68 @@ function createAssigner(assigner) {
 
 module.exports = createAssigner;
 
-},{"./_isIterateeCall":28,"./rest":53}],23:[function(require,module,exports){
+},{"./_isIterateeCall":36,"./rest":64}],29:[function(require,module,exports){
+var isArrayLike = require('./isArrayLike');
+
+/**
+ * Creates a `baseEach` or `baseEachRight` function.
+ *
+ * @private
+ * @param {Function} eachFunc The function to iterate over a collection.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new base function.
+ */
+function createBaseEach(eachFunc, fromRight) {
+  return function(collection, iteratee) {
+    if (collection == null) {
+      return collection;
+    }
+    if (!isArrayLike(collection)) {
+      return eachFunc(collection, iteratee);
+    }
+    var length = collection.length,
+        index = fromRight ? length : -1,
+        iterable = Object(collection);
+
+    while ((fromRight ? index-- : ++index < length)) {
+      if (iteratee(iterable[index], index, iterable) === false) {
+        break;
+      }
+    }
+    return collection;
+  };
+}
+
+module.exports = createBaseEach;
+
+},{"./isArrayLike":53}],30:[function(require,module,exports){
+/**
+ * Creates a base function for methods like `_.forIn`.
+ *
+ * @private
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new base function.
+ */
+function createBaseFor(fromRight) {
+  return function(object, iteratee, keysFunc) {
+    var index = -1,
+        iterable = Object(object),
+        props = keysFunc(object),
+        length = props.length;
+
+    while (length--) {
+      var key = props[fromRight ? length : ++index];
+      if (iteratee(iterable[key], key, iterable) === false) {
+        break;
+      }
+    }
+    return object;
+  };
+}
+
+module.exports = createBaseFor;
+
+},{}],31:[function(require,module,exports){
 /** Used to map characters to HTML entities. */
 var htmlEscapes = {
   '&': '&amp;',
@@ -536,7 +732,7 @@ function escapeHtmlChar(chr) {
 
 module.exports = escapeHtmlChar;
 
-},{}],24:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /** Used to escape characters for inclusion in compiled string literals. */
 var stringEscapes = {
   '\\': '\\',
@@ -560,7 +756,7 @@ function escapeStringChar(chr) {
 
 module.exports = escapeStringChar;
 
-},{}],25:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 var baseProperty = require('./_baseProperty');
 
 /**
@@ -577,7 +773,7 @@ var getLength = baseProperty('length');
 
 module.exports = getLength;
 
-},{"./_baseProperty":16}],26:[function(require,module,exports){
+},{"./_baseProperty":22}],34:[function(require,module,exports){
 var baseTimes = require('./_baseTimes'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray'),
@@ -603,7 +799,7 @@ function indexKeys(object) {
 
 module.exports = indexKeys;
 
-},{"./_baseTimes":17,"./isArguments":40,"./isArray":41,"./isLength":46,"./isString":49}],27:[function(require,module,exports){
+},{"./_baseTimes":23,"./isArguments":51,"./isArray":52,"./isLength":57,"./isString":60}],35:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -626,7 +822,7 @@ function isIndex(value, length) {
 
 module.exports = isIndex;
 
-},{}],28:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 var eq = require('./eq'),
     isArrayLike = require('./isArrayLike'),
     isIndex = require('./_isIndex'),
@@ -656,7 +852,7 @@ function isIterateeCall(value, index, object) {
 
 module.exports = isIterateeCall;
 
-},{"./_isIndex":27,"./eq":38,"./isArrayLike":42,"./isObject":47}],29:[function(require,module,exports){
+},{"./_isIndex":35,"./eq":47,"./isArrayLike":53,"./isObject":58}],37:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -676,7 +872,7 @@ function isPrototype(value) {
 
 module.exports = isPrototype;
 
-},{}],30:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /**
  * Converts `iterator` to an array.
  *
@@ -696,25 +892,25 @@ function iteratorToArray(iterator) {
 
 module.exports = iteratorToArray;
 
-},{}],31:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /** Used to match template delimiters. */
 var reEscape = /<%-([\s\S]+?)%>/g;
 
 module.exports = reEscape;
 
-},{}],32:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /** Used to match template delimiters. */
 var reEvaluate = /<%([\s\S]+?)%>/g;
 
 module.exports = reEvaluate;
 
-},{}],33:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /** Used to match template delimiters. */
 var reInterpolate = /<%=([\s\S]+?)%>/g;
 
 module.exports = reInterpolate;
 
-},{}],34:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 (function (global){
 var checkGlobal = require('./_checkGlobal');
 
@@ -759,7 +955,7 @@ var root = freeGlobal ||
 module.exports = root;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_checkGlobal":19}],35:[function(require,module,exports){
+},{"./_checkGlobal":25}],43:[function(require,module,exports){
 var copyObjectWith = require('./_copyObjectWith'),
     createAssigner = require('./_createAssigner'),
     keysIn = require('./keysIn');
@@ -797,7 +993,7 @@ var assignInWith = createAssigner(function(object, source, srcIndex, customizer)
 
 module.exports = assignInWith;
 
-},{"./_copyObjectWith":21,"./_createAssigner":22,"./keysIn":52}],36:[function(require,module,exports){
+},{"./_copyObjectWith":27,"./_createAssigner":28,"./keysIn":63}],44:[function(require,module,exports){
 var apply = require('./_apply'),
     isError = require('./isError'),
     rest = require('./rest');
@@ -832,7 +1028,7 @@ var attempt = rest(function(func, args) {
 
 module.exports = attempt;
 
-},{"./_apply":7,"./isError":44,"./rest":53}],37:[function(require,module,exports){
+},{"./_apply":8,"./isError":55,"./rest":64}],45:[function(require,module,exports){
 var baseAssign = require('./_baseAssign'),
     baseCreate = require('./_baseCreate');
 
@@ -875,7 +1071,10 @@ function create(prototype, properties) {
 
 module.exports = create;
 
-},{"./_baseAssign":11,"./_baseCreate":12}],38:[function(require,module,exports){
+},{"./_baseAssign":13,"./_baseCreate":15}],46:[function(require,module,exports){
+module.exports = require('./forEach');
+
+},{"./forEach":49}],47:[function(require,module,exports){
 /**
  * Performs a [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
  * comparison between two values to determine if they are equivalent.
@@ -912,7 +1111,7 @@ function eq(value, other) {
 
 module.exports = eq;
 
-},{}],39:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 var escapeHtmlChar = require('./_escapeHtmlChar'),
     toString = require('./toString');
 
@@ -961,7 +1160,71 @@ function escape(string) {
 
 module.exports = escape;
 
-},{"./_escapeHtmlChar":23,"./toString":58}],40:[function(require,module,exports){
+},{"./_escapeHtmlChar":31,"./toString":69}],49:[function(require,module,exports){
+var arrayEach = require('./_arrayEach'),
+    baseCastFunction = require('./_baseCastFunction'),
+    baseEach = require('./_baseEach'),
+    isArray = require('./isArray');
+
+/**
+ * Iterates over elements of `collection` invoking `iteratee` for each element.
+ * The iteratee is invoked with three arguments: (value, index|key, collection).
+ * Iteratee functions may exit iteration early by explicitly returning `false`.
+ *
+ * **Note:** As with other "Collections" methods, objects with a "length" property
+ * are iterated like arrays. To avoid this behavior use `_.forIn` or `_.forOwn`
+ * for object iteration.
+ *
+ * @static
+ * @memberOf _
+ * @alias each
+ * @category Collection
+ * @param {Array|Object} collection The collection to iterate over.
+ * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+ * @returns {Array|Object} Returns `collection`.
+ * @example
+ *
+ * _([1, 2]).forEach(function(value) {
+ *   console.log(value);
+ * });
+ * // => logs `1` then `2`
+ *
+ * _.forEach({ 'a': 1, 'b': 2 }, function(value, key) {
+ *   console.log(key);
+ * });
+ * // => logs 'a' then 'b' (iteration order is not guaranteed)
+ */
+function forEach(collection, iteratee) {
+  return (typeof iteratee == 'function' && isArray(collection))
+    ? arrayEach(collection, iteratee)
+    : baseEach(collection, baseCastFunction(iteratee));
+}
+
+module.exports = forEach;
+
+},{"./_arrayEach":9,"./_baseCastFunction":14,"./_baseEach":16,"./isArray":52}],50:[function(require,module,exports){
+/**
+ * This method returns the first argument given to it.
+ *
+ * @static
+ * @memberOf _
+ * @category Util
+ * @param {*} value Any value.
+ * @returns {*} Returns `value`.
+ * @example
+ *
+ * var object = { 'user': 'fred' };
+ *
+ * _.identity(object) === object;
+ * // => true
+ */
+function identity(value) {
+  return value;
+}
+
+module.exports = identity;
+
+},{}],51:[function(require,module,exports){
 var isArrayLikeObject = require('./isArrayLikeObject');
 
 /** `Object#toString` result references. */
@@ -1006,7 +1269,7 @@ function isArguments(value) {
 
 module.exports = isArguments;
 
-},{"./isArrayLikeObject":43}],41:[function(require,module,exports){
+},{"./isArrayLikeObject":54}],52:[function(require,module,exports){
 /**
  * Checks if `value` is classified as an `Array` object.
  *
@@ -1034,7 +1297,7 @@ var isArray = Array.isArray;
 
 module.exports = isArray;
 
-},{}],42:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 var getLength = require('./_getLength'),
     isFunction = require('./isFunction'),
     isLength = require('./isLength');
@@ -1069,7 +1332,7 @@ function isArrayLike(value) {
 
 module.exports = isArrayLike;
 
-},{"./_getLength":25,"./isFunction":45,"./isLength":46}],43:[function(require,module,exports){
+},{"./_getLength":33,"./isFunction":56,"./isLength":57}],54:[function(require,module,exports){
 var isArrayLike = require('./isArrayLike'),
     isObjectLike = require('./isObjectLike');
 
@@ -1102,7 +1365,7 @@ function isArrayLikeObject(value) {
 
 module.exports = isArrayLikeObject;
 
-},{"./isArrayLike":42,"./isObjectLike":48}],44:[function(require,module,exports){
+},{"./isArrayLike":53,"./isObjectLike":59}],55:[function(require,module,exports){
 var isObjectLike = require('./isObjectLike');
 
 /** `Object#toString` result references. */
@@ -1144,7 +1407,7 @@ function isError(value) {
 
 module.exports = isError;
 
-},{"./isObjectLike":48}],45:[function(require,module,exports){
+},{"./isObjectLike":59}],56:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /** `Object#toString` result references. */
@@ -1186,7 +1449,7 @@ function isFunction(value) {
 
 module.exports = isFunction;
 
-},{"./isObject":47}],46:[function(require,module,exports){
+},{"./isObject":58}],57:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -1221,7 +1484,7 @@ function isLength(value) {
 
 module.exports = isLength;
 
-},{}],47:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 /**
  * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
  * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
@@ -1252,7 +1515,7 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{}],48:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
@@ -1282,7 +1545,7 @@ function isObjectLike(value) {
 
 module.exports = isObjectLike;
 
-},{}],49:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 var isArray = require('./isArray'),
     isObjectLike = require('./isObjectLike');
 
@@ -1321,7 +1584,7 @@ function isString(value) {
 
 module.exports = isString;
 
-},{"./isArray":41,"./isObjectLike":48}],50:[function(require,module,exports){
+},{"./isArray":52,"./isObjectLike":59}],61:[function(require,module,exports){
 var isObjectLike = require('./isObjectLike');
 
 /** `Object#toString` result references. */
@@ -1359,7 +1622,7 @@ function isSymbol(value) {
 
 module.exports = isSymbol;
 
-},{"./isObjectLike":48}],51:[function(require,module,exports){
+},{"./isObjectLike":59}],62:[function(require,module,exports){
 var baseHas = require('./_baseHas'),
     baseKeys = require('./_baseKeys'),
     indexKeys = require('./_indexKeys'),
@@ -1416,7 +1679,7 @@ function keys(object) {
 
 module.exports = keys;
 
-},{"./_baseHas":13,"./_baseKeys":14,"./_indexKeys":26,"./_isIndex":27,"./_isPrototype":29,"./isArrayLike":42}],52:[function(require,module,exports){
+},{"./_baseHas":19,"./_baseKeys":20,"./_indexKeys":34,"./_isIndex":35,"./_isPrototype":37,"./isArrayLike":53}],63:[function(require,module,exports){
 var baseKeysIn = require('./_baseKeysIn'),
     indexKeys = require('./_indexKeys'),
     isIndex = require('./_isIndex'),
@@ -1472,7 +1735,7 @@ function keysIn(object) {
 
 module.exports = keysIn;
 
-},{"./_baseKeysIn":15,"./_indexKeys":26,"./_isIndex":27,"./_isPrototype":29}],53:[function(require,module,exports){
+},{"./_baseKeysIn":21,"./_indexKeys":34,"./_isIndex":35,"./_isPrototype":37}],64:[function(require,module,exports){
 var apply = require('./_apply'),
     toInteger = require('./toInteger');
 
@@ -1535,7 +1798,7 @@ function rest(func, start) {
 
 module.exports = rest;
 
-},{"./_apply":7,"./toInteger":56}],54:[function(require,module,exports){
+},{"./_apply":8,"./toInteger":67}],65:[function(require,module,exports){
 var assignInDefaults = require('./_assignInDefaults'),
     assignInWith = require('./assignInWith'),
     attempt = require('./attempt'),
@@ -1763,7 +2026,7 @@ function template(string, options, guard) {
 
 module.exports = template;
 
-},{"./_assignInDefaults":9,"./_baseValues":18,"./_escapeStringChar":24,"./_isIterateeCall":28,"./_reInterpolate":33,"./assignInWith":35,"./attempt":36,"./isError":44,"./keys":51,"./templateSettings":55,"./toString":58}],55:[function(require,module,exports){
+},{"./_assignInDefaults":11,"./_baseValues":24,"./_escapeStringChar":32,"./_isIterateeCall":36,"./_reInterpolate":41,"./assignInWith":43,"./attempt":44,"./isError":55,"./keys":62,"./templateSettings":66,"./toString":69}],66:[function(require,module,exports){
 var escape = require('./escape'),
     reEscape = require('./_reEscape'),
     reEvaluate = require('./_reEvaluate'),
@@ -1832,7 +2095,7 @@ var templateSettings = {
 
 module.exports = templateSettings;
 
-},{"./_reEscape":31,"./_reEvaluate":32,"./_reInterpolate":33,"./escape":39}],56:[function(require,module,exports){
+},{"./_reEscape":39,"./_reEvaluate":40,"./_reInterpolate":41,"./escape":48}],67:[function(require,module,exports){
 var toNumber = require('./toNumber');
 
 /** Used as references for various `Number` constants. */
@@ -1878,7 +2141,7 @@ function toInteger(value) {
 
 module.exports = toInteger;
 
-},{"./toNumber":57}],57:[function(require,module,exports){
+},{"./toNumber":68}],68:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isObject = require('./isObject');
 
@@ -1939,7 +2202,7 @@ function toNumber(value) {
 
 module.exports = toNumber;
 
-},{"./isFunction":45,"./isObject":47}],58:[function(require,module,exports){
+},{"./isFunction":56,"./isObject":58}],69:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     isSymbol = require('./isSymbol');
 
@@ -1987,4 +2250,4 @@ function toString(value) {
 
 module.exports = toString;
 
-},{"./_Symbol":6,"./isSymbol":50}]},{},[4]);
+},{"./_Symbol":7,"./isSymbol":61}]},{},[5]);
