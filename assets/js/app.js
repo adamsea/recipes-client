@@ -1,132 +1,303 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// Let's include Lodash here.
-var each = require('lodash/collection/each');
+var template = require('lodash/string/template');
 
-each(['Tom', 'Bill', 'Susan', 'Jeanie'], function(name) {
-	console.log('Hi there, ' + name + '!');
+//
+// Constructor for the component.
+// Will set up the DOM element for this component
+// and call any initialization logic for the component.
+//
+function BaseComponent(config) {
+  this.el = (config.el instanceof HTMLElement) && config.el || document.querySelector(config.el);
+  this.template = template(this.getTemplate());
+  this.init(config);
+}
+
+//
+// Set up the component with a base config
+// Implement this method in your component do
+// any initializtion logic, etc.
+//
+BaseComponent.prototype.init = function(config) {
+  // Override this method
+};
+
+//
+// Get the string template for the component instance.
+// Use require() with a relative path from the component
+// being created to the template.
+// Implement this method in your component.
+//
+BaseComponent.prototype.getTemplate = function() {
+  // Override this method
+};
+
+//
+// Append the DOM of another component to this one.
+//
+BaseComponent.prototype.append = function(child) {
+  return this.el.appendChild(child);
+};
+
+//
+// Remove the DOM of another component to this one.
+//
+BaseComponent.prototype.remove = function(child) {
+  return this.el.removeChild(child);
+};
+
+//
+// Render the component and its children.
+// Implement this method in your component.
+//
+BaseComponent.prototype.render = function(data) {
+  // Override this method
+};
+
+module.exports = BaseComponent;
+},{"lodash/string/template":37}],2:[function(require,module,exports){
+var BaseComponent = require('../../base');
+var create = require('lodash/object/create');
+
+//
+// Constructor for the recipe card
+//
+function RecipeCard(config) {
+  BaseComponent.call(this, config);
+}
+
+//
+// Inherit from the BaseComponent
+//
+RecipeCard.prototype = create(BaseComponent.prototype, {
+  constructor: RecipeCard
 });
-},{"lodash/collection/each":2}],2:[function(require,module,exports){
-module.exports = require('./forEach');
 
-},{"./forEach":3}],3:[function(require,module,exports){
-var arrayEach = require('../internal/arrayEach'),
-    baseEach = require('../internal/baseEach'),
-    createForEach = require('../internal/createForEach');
+//
+// Override the init() method
+//
+RecipeCard.prototype.init = function(config) {
+  // This will connect events to view recipe details onclick
+};
+
+//
+// Override the getTemplate() method
+//
+RecipeCard.prototype.getTemplate = function() {
+  return require('./template.html');
+};
+
+//
+// Override the render() method
+//
+RecipeCard.prototype.render = function(data) {
+  this.el.innerHTML = this.template(data);
+};
+
+module.exports = RecipeCard;
+},{"../../base":1,"./template.html":3,"lodash/object/create":33}],3:[function(require,module,exports){
+module.exports = "<div class=\"card recipe-card\">\n  <div class=\"card-title\">\n    <h3><%= title %></h3>\n  </div>\n\n  <div class=\"card-content\">\n    <%- description %>\n  </div>\n</div>";
+
+},{}],4:[function(require,module,exports){
+// Let's include Lodash here.
+var RecipeCard = require('./components/recipes/card');
+var card = new RecipeCard({
+  el: '.recipe-list'
+});
+card.render();
+},{"./components/recipes/card":2}],5:[function(require,module,exports){
+/** Used as the `TypeError` message for "Functions" methods. */
+var FUNC_ERROR_TEXT = 'Expected a function';
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max;
 
 /**
- * Iterates over elements of `collection` invoking `iteratee` for each element.
- * The `iteratee` is bound to `thisArg` and invoked with three arguments:
- * (value, index|key, collection). Iteratee functions may exit iteration early
- * by explicitly returning `false`.
+ * Creates a function that invokes `func` with the `this` binding of the
+ * created function and arguments from `start` and beyond provided as an array.
  *
- * **Note:** As with other "Collections" methods, objects with a "length" property
- * are iterated like arrays. To avoid this behavior `_.forIn` or `_.forOwn`
- * may be used for object iteration.
+ * **Note:** This method is based on the [rest parameter](https://developer.mozilla.org/Web/JavaScript/Reference/Functions/rest_parameters).
  *
  * @static
  * @memberOf _
- * @alias each
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} [iteratee=_.identity] The function invoked per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {Array|Object|string} Returns `collection`.
+ * @category Function
+ * @param {Function} func The function to apply a rest parameter to.
+ * @param {number} [start=func.length-1] The start position of the rest parameter.
+ * @returns {Function} Returns the new function.
  * @example
  *
- * _([1, 2]).forEach(function(n) {
- *   console.log(n);
- * }).value();
- * // => logs each value from left to right and returns the array
- *
- * _.forEach({ 'a': 1, 'b': 2 }, function(n, key) {
- *   console.log(n, key);
+ * var say = _.restParam(function(what, names) {
+ *   return what + ' ' + _.initial(names).join(', ') +
+ *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
  * });
- * // => logs each value-key pair and returns the object (iteration order is not guaranteed)
- */
-var forEach = createForEach(arrayEach, baseEach);
-
-module.exports = forEach;
-
-},{"../internal/arrayEach":4,"../internal/baseEach":5,"../internal/createForEach":12}],4:[function(require,module,exports){
-/**
- * A specialized version of `_.forEach` for arrays without support for callback
- * shorthands and `this` binding.
  *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns `array`.
+ * say('hello', 'fred', 'barney', 'pebbles');
+ * // => 'hello fred, barney, & pebbles'
  */
-function arrayEach(array, iteratee) {
-  var index = -1,
-      length = array.length;
-
-  while (++index < length) {
-    if (iteratee(array[index], index, array) === false) {
-      break;
-    }
+function restParam(func, start) {
+  if (typeof func != 'function') {
+    throw new TypeError(FUNC_ERROR_TEXT);
   }
-  return array;
+  start = nativeMax(start === undefined ? (func.length - 1) : (+start || 0), 0);
+  return function() {
+    var args = arguments,
+        index = -1,
+        length = nativeMax(args.length - start, 0),
+        rest = Array(length);
+
+    while (++index < length) {
+      rest[index] = args[start + index];
+    }
+    switch (start) {
+      case 0: return func.call(this, rest);
+      case 1: return func.call(this, args[0], rest);
+      case 2: return func.call(this, args[0], args[1], rest);
+    }
+    var otherArgs = Array(start + 1);
+    index = -1;
+    while (++index < start) {
+      otherArgs[index] = args[index];
+    }
+    otherArgs[start] = rest;
+    return func.apply(this, otherArgs);
+  };
 }
 
-module.exports = arrayEach;
+module.exports = restParam;
 
-},{}],5:[function(require,module,exports){
-var baseForOwn = require('./baseForOwn'),
-    createBaseEach = require('./createBaseEach');
+},{}],6:[function(require,module,exports){
+/** Used for native method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
 
 /**
- * The base implementation of `_.forEach` without support for callback
- * shorthands and `this` binding.
+ * Used by `_.template` to customize its `_.assign` use.
+ *
+ * **Note:** This function is like `assignDefaults` except that it ignores
+ * inherited property values when checking if a property is `undefined`.
  *
  * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array|Object|string} Returns `collection`.
+ * @param {*} objectValue The destination object property value.
+ * @param {*} sourceValue The source object property value.
+ * @param {string} key The key associated with the object and source values.
+ * @param {Object} object The destination object.
+ * @returns {*} Returns the value to assign to the destination object.
  */
-var baseEach = createBaseEach(baseForOwn);
+function assignOwnDefaults(objectValue, sourceValue, key, object) {
+  return (objectValue === undefined || !hasOwnProperty.call(object, key))
+    ? sourceValue
+    : objectValue;
+}
 
-module.exports = baseEach;
+module.exports = assignOwnDefaults;
 
-},{"./baseForOwn":7,"./createBaseEach":10}],6:[function(require,module,exports){
-var createBaseFor = require('./createBaseFor');
+},{}],7:[function(require,module,exports){
+var keys = require('../object/keys');
 
 /**
- * The base implementation of `baseForIn` and `baseForOwn` which iterates
- * over `object` properties returned by `keysFunc` invoking `iteratee` for
- * each property. Iteratee functions may exit iteration early by explicitly
- * returning `false`.
+ * A specialized version of `_.assign` for customizing assigned values without
+ * support for argument juggling, multiple sources, and `this` binding `customizer`
+ * functions.
  *
  * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {Function} keysFunc The function to get the keys of `object`.
+ * @param {Object} object The destination object.
+ * @param {Object} source The source object.
+ * @param {Function} customizer The function to customize assigned values.
  * @returns {Object} Returns `object`.
  */
-var baseFor = createBaseFor();
+function assignWith(object, source, customizer) {
+  var index = -1,
+      props = keys(source),
+      length = props.length;
 
-module.exports = baseFor;
+  while (++index < length) {
+    var key = props[index],
+        value = object[key],
+        result = customizer(value, source[key], key, object, source);
 
-},{"./createBaseFor":11}],7:[function(require,module,exports){
-var baseFor = require('./baseFor'),
+    if ((result === result ? (result !== value) : (value === value)) ||
+        (value === undefined && !(key in object))) {
+      object[key] = result;
+    }
+  }
+  return object;
+}
+
+module.exports = assignWith;
+
+},{"../object/keys":34}],8:[function(require,module,exports){
+var baseCopy = require('./baseCopy'),
     keys = require('../object/keys');
 
 /**
- * The base implementation of `_.forOwn` without support for callback
- * shorthands and `this` binding.
+ * The base implementation of `_.assign` without support for argument juggling,
+ * multiple sources, and `customizer` functions.
  *
  * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
+ * @param {Object} object The destination object.
+ * @param {Object} source The source object.
  * @returns {Object} Returns `object`.
  */
-function baseForOwn(object, iteratee) {
-  return baseFor(object, iteratee, keys);
+function baseAssign(object, source) {
+  return source == null
+    ? object
+    : baseCopy(source, keys(source), object);
 }
 
-module.exports = baseForOwn;
+module.exports = baseAssign;
 
-},{"../object/keys":26,"./baseFor":6}],8:[function(require,module,exports){
+},{"../object/keys":34,"./baseCopy":9}],9:[function(require,module,exports){
+/**
+ * Copies properties of `source` to `object`.
+ *
+ * @private
+ * @param {Object} source The object to copy properties from.
+ * @param {Array} props The property names to copy.
+ * @param {Object} [object={}] The object to copy properties to.
+ * @returns {Object} Returns `object`.
+ */
+function baseCopy(source, props, object) {
+  object || (object = {});
+
+  var index = -1,
+      length = props.length;
+
+  while (++index < length) {
+    var key = props[index];
+    object[key] = source[key];
+  }
+  return object;
+}
+
+module.exports = baseCopy;
+
+},{}],10:[function(require,module,exports){
+var isObject = require('../lang/isObject');
+
+/**
+ * The base implementation of `_.create` without support for assigning
+ * properties to the created object.
+ *
+ * @private
+ * @param {Object} prototype The object to inherit from.
+ * @returns {Object} Returns the new object.
+ */
+var baseCreate = (function() {
+  function object() {}
+  return function(prototype) {
+    if (isObject(prototype)) {
+      object.prototype = prototype;
+      var result = new object;
+      object.prototype = undefined;
+    }
+    return result || {};
+  };
+}());
+
+module.exports = baseCreate;
+
+},{"../lang/isObject":32}],11:[function(require,module,exports){
 /**
  * The base implementation of `_.property` without support for deep paths.
  *
@@ -142,132 +313,94 @@ function baseProperty(key) {
 
 module.exports = baseProperty;
 
-},{}],9:[function(require,module,exports){
-var identity = require('../utility/identity');
-
+},{}],12:[function(require,module,exports){
 /**
- * A specialized version of `baseCallback` which only supports `this` binding
- * and specifying the number of arguments to provide to `func`.
+ * Converts `value` to a string if it's not one. An empty string is returned
+ * for `null` or `undefined` values.
  *
  * @private
- * @param {Function} func The function to bind.
- * @param {*} thisArg The `this` binding of `func`.
- * @param {number} [argCount] The number of arguments to provide to `func`.
- * @returns {Function} Returns the callback.
+ * @param {*} value The value to process.
+ * @returns {string} Returns the string.
  */
-function bindCallback(func, thisArg, argCount) {
-  if (typeof func != 'function') {
-    return identity;
+function baseToString(value) {
+  return value == null ? '' : (value + '');
+}
+
+module.exports = baseToString;
+
+},{}],13:[function(require,module,exports){
+/**
+ * The base implementation of `_.values` and `_.valuesIn` which creates an
+ * array of `object` property values corresponding to the property names
+ * of `props`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array} props The property names to get values for.
+ * @returns {Object} Returns the array of property values.
+ */
+function baseValues(object, props) {
+  var index = -1,
+      length = props.length,
+      result = Array(length);
+
+  while (++index < length) {
+    result[index] = object[props[index]];
   }
-  if (thisArg === undefined) {
-    return func;
-  }
-  switch (argCount) {
-    case 1: return function(value) {
-      return func.call(thisArg, value);
-    };
-    case 3: return function(value, index, collection) {
-      return func.call(thisArg, value, index, collection);
-    };
-    case 4: return function(accumulator, value, index, collection) {
-      return func.call(thisArg, accumulator, value, index, collection);
-    };
-    case 5: return function(value, other, key, object, source) {
-      return func.call(thisArg, value, other, key, object, source);
-    };
-  }
-  return function() {
-    return func.apply(thisArg, arguments);
-  };
+  return result;
 }
 
-module.exports = bindCallback;
+module.exports = baseValues;
 
-},{"../utility/identity":28}],10:[function(require,module,exports){
-var getLength = require('./getLength'),
-    isLength = require('./isLength'),
-    toObject = require('./toObject');
+},{}],14:[function(require,module,exports){
+/** Used to map characters to HTML entities. */
+var htmlEscapes = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '`': '&#96;'
+};
 
 /**
- * Creates a `baseEach` or `baseEachRight` function.
+ * Used by `_.escape` to convert characters to HTML entities.
  *
  * @private
- * @param {Function} eachFunc The function to iterate over a collection.
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {Function} Returns the new base function.
+ * @param {string} chr The matched character to escape.
+ * @returns {string} Returns the escaped character.
  */
-function createBaseEach(eachFunc, fromRight) {
-  return function(collection, iteratee) {
-    var length = collection ? getLength(collection) : 0;
-    if (!isLength(length)) {
-      return eachFunc(collection, iteratee);
-    }
-    var index = fromRight ? length : -1,
-        iterable = toObject(collection);
-
-    while ((fromRight ? index-- : ++index < length)) {
-      if (iteratee(iterable[index], index, iterable) === false) {
-        break;
-      }
-    }
-    return collection;
-  };
+function escapeHtmlChar(chr) {
+  return htmlEscapes[chr];
 }
 
-module.exports = createBaseEach;
+module.exports = escapeHtmlChar;
 
-},{"./getLength":13,"./isLength":17,"./toObject":20}],11:[function(require,module,exports){
-var toObject = require('./toObject');
+},{}],15:[function(require,module,exports){
+/** Used to escape characters for inclusion in compiled string literals. */
+var stringEscapes = {
+  '\\': '\\',
+  "'": "'",
+  '\n': 'n',
+  '\r': 'r',
+  '\u2028': 'u2028',
+  '\u2029': 'u2029'
+};
 
 /**
- * Creates a base function for `_.forIn` or `_.forInRight`.
+ * Used by `_.template` to escape characters for inclusion in compiled string literals.
  *
  * @private
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {Function} Returns the new base function.
+ * @param {string} chr The matched character to escape.
+ * @returns {string} Returns the escaped character.
  */
-function createBaseFor(fromRight) {
-  return function(object, iteratee, keysFunc) {
-    var iterable = toObject(object),
-        props = keysFunc(object),
-        length = props.length,
-        index = fromRight ? length : -1;
-
-    while ((fromRight ? index-- : ++index < length)) {
-      var key = props[index];
-      if (iteratee(iterable[key], key, iterable) === false) {
-        break;
-      }
-    }
-    return object;
-  };
+function escapeStringChar(chr) {
+  return '\\' + stringEscapes[chr];
 }
 
-module.exports = createBaseFor;
+module.exports = escapeStringChar;
 
-},{"./toObject":20}],12:[function(require,module,exports){
-var bindCallback = require('./bindCallback'),
-    isArray = require('../lang/isArray');
-
-/**
- * Creates a function for `_.forEach` or `_.forEachRight`.
- *
- * @private
- * @param {Function} arrayFunc The function to iterate over an array.
- * @param {Function} eachFunc The function to iterate over a collection.
- * @returns {Function} Returns the new each function.
- */
-function createForEach(arrayFunc, eachFunc) {
-  return function(collection, iteratee, thisArg) {
-    return (typeof iteratee == 'function' && thisArg === undefined && isArray(collection))
-      ? arrayFunc(collection, iteratee)
-      : eachFunc(collection, bindCallback(iteratee, thisArg, 3));
-  };
-}
-
-module.exports = createForEach;
-
-},{"../lang/isArray":22,"./bindCallback":9}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var baseProperty = require('./baseProperty');
 
 /**
@@ -284,7 +417,7 @@ var getLength = baseProperty('length');
 
 module.exports = getLength;
 
-},{"./baseProperty":8}],14:[function(require,module,exports){
+},{"./baseProperty":11}],17:[function(require,module,exports){
 var isNative = require('../lang/isNative');
 
 /**
@@ -302,7 +435,7 @@ function getNative(object, key) {
 
 module.exports = getNative;
 
-},{"../lang/isNative":24}],15:[function(require,module,exports){
+},{"../lang/isNative":31}],18:[function(require,module,exports){
 var getLength = require('./getLength'),
     isLength = require('./isLength');
 
@@ -319,7 +452,7 @@ function isArrayLike(value) {
 
 module.exports = isArrayLike;
 
-},{"./getLength":13,"./isLength":17}],16:[function(require,module,exports){
+},{"./getLength":16,"./isLength":21}],19:[function(require,module,exports){
 /** Used to detect unsigned integer values. */
 var reIsUint = /^\d+$/;
 
@@ -345,7 +478,37 @@ function isIndex(value, length) {
 
 module.exports = isIndex;
 
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+var isArrayLike = require('./isArrayLike'),
+    isIndex = require('./isIndex'),
+    isObject = require('../lang/isObject');
+
+/**
+ * Checks if the provided arguments are from an iteratee call.
+ *
+ * @private
+ * @param {*} value The potential iteratee value argument.
+ * @param {*} index The potential iteratee index or key argument.
+ * @param {*} object The potential iteratee object argument.
+ * @returns {boolean} Returns `true` if the arguments are from an iteratee call, else `false`.
+ */
+function isIterateeCall(value, index, object) {
+  if (!isObject(object)) {
+    return false;
+  }
+  var type = typeof index;
+  if (type == 'number'
+      ? (isArrayLike(object) && isIndex(index, object.length))
+      : (type == 'string' && index in object)) {
+    var other = object[index];
+    return value === value ? (value === other) : (other !== other);
+  }
+  return false;
+}
+
+module.exports = isIterateeCall;
+
+},{"../lang/isObject":32,"./isArrayLike":18,"./isIndex":19}],21:[function(require,module,exports){
 /**
  * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
  * of an array-like value.
@@ -367,7 +530,7 @@ function isLength(value) {
 
 module.exports = isLength;
 
-},{}],18:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /**
  * Checks if `value` is object-like.
  *
@@ -381,7 +544,25 @@ function isObjectLike(value) {
 
 module.exports = isObjectLike;
 
-},{}],19:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
+/** Used to match template delimiters. */
+var reEscape = /<%-([\s\S]+?)%>/g;
+
+module.exports = reEscape;
+
+},{}],24:[function(require,module,exports){
+/** Used to match template delimiters. */
+var reEvaluate = /<%([\s\S]+?)%>/g;
+
+module.exports = reEvaluate;
+
+},{}],25:[function(require,module,exports){
+/** Used to match template delimiters. */
+var reInterpolate = /<%=([\s\S]+?)%>/g;
+
+module.exports = reInterpolate;
+
+},{}],26:[function(require,module,exports){
 var isArguments = require('../lang/isArguments'),
     isArray = require('../lang/isArray'),
     isIndex = require('./isIndex'),
@@ -424,23 +605,7 @@ function shimKeys(object) {
 
 module.exports = shimKeys;
 
-},{"../lang/isArguments":21,"../lang/isArray":22,"../object/keysIn":27,"./isIndex":16,"./isLength":17}],20:[function(require,module,exports){
-var isObject = require('../lang/isObject');
-
-/**
- * Converts `value` to an object if it's not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-module.exports = toObject;
-
-},{"../lang/isObject":25}],21:[function(require,module,exports){
+},{"../lang/isArguments":27,"../lang/isArray":28,"../object/keysIn":35,"./isIndex":19,"./isLength":21}],27:[function(require,module,exports){
 var isArrayLike = require('../internal/isArrayLike'),
     isObjectLike = require('../internal/isObjectLike');
 
@@ -476,7 +641,7 @@ function isArguments(value) {
 
 module.exports = isArguments;
 
-},{"../internal/isArrayLike":15,"../internal/isObjectLike":18}],22:[function(require,module,exports){
+},{"../internal/isArrayLike":18,"../internal/isObjectLike":22}],28:[function(require,module,exports){
 var getNative = require('../internal/getNative'),
     isLength = require('../internal/isLength'),
     isObjectLike = require('../internal/isObjectLike');
@@ -518,7 +683,45 @@ var isArray = nativeIsArray || function(value) {
 
 module.exports = isArray;
 
-},{"../internal/getNative":14,"../internal/isLength":17,"../internal/isObjectLike":18}],23:[function(require,module,exports){
+},{"../internal/getNative":17,"../internal/isLength":21,"../internal/isObjectLike":22}],29:[function(require,module,exports){
+var isObjectLike = require('../internal/isObjectLike');
+
+/** `Object#toString` result references. */
+var errorTag = '[object Error]';
+
+/** Used for native method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objToString = objectProto.toString;
+
+/**
+ * Checks if `value` is an `Error`, `EvalError`, `RangeError`, `ReferenceError`,
+ * `SyntaxError`, `TypeError`, or `URIError` object.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an error object, else `false`.
+ * @example
+ *
+ * _.isError(new Error);
+ * // => true
+ *
+ * _.isError(Error);
+ * // => false
+ */
+function isError(value) {
+  return isObjectLike(value) && typeof value.message == 'string' && objToString.call(value) == errorTag;
+}
+
+module.exports = isError;
+
+},{"../internal/isObjectLike":22}],30:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /** `Object#toString` result references. */
@@ -558,7 +761,7 @@ function isFunction(value) {
 
 module.exports = isFunction;
 
-},{"./isObject":25}],24:[function(require,module,exports){
+},{"./isObject":32}],31:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isObjectLike = require('../internal/isObjectLike');
 
@@ -608,7 +811,7 @@ function isNative(value) {
 
 module.exports = isNative;
 
-},{"../internal/isObjectLike":18,"./isFunction":23}],25:[function(require,module,exports){
+},{"../internal/isObjectLike":22,"./isFunction":30}],32:[function(require,module,exports){
 /**
  * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
  * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
@@ -638,7 +841,56 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{}],26:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
+var baseAssign = require('../internal/baseAssign'),
+    baseCreate = require('../internal/baseCreate'),
+    isIterateeCall = require('../internal/isIterateeCall');
+
+/**
+ * Creates an object that inherits from the given `prototype` object. If a
+ * `properties` object is provided its own enumerable properties are assigned
+ * to the created object.
+ *
+ * @static
+ * @memberOf _
+ * @category Object
+ * @param {Object} prototype The object to inherit from.
+ * @param {Object} [properties] The properties to assign to the object.
+ * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
+ * @returns {Object} Returns the new object.
+ * @example
+ *
+ * function Shape() {
+ *   this.x = 0;
+ *   this.y = 0;
+ * }
+ *
+ * function Circle() {
+ *   Shape.call(this);
+ * }
+ *
+ * Circle.prototype = _.create(Shape.prototype, {
+ *   'constructor': Circle
+ * });
+ *
+ * var circle = new Circle;
+ * circle instanceof Circle;
+ * // => true
+ *
+ * circle instanceof Shape;
+ * // => true
+ */
+function create(prototype, properties, guard) {
+  var result = baseCreate(prototype);
+  if (guard && isIterateeCall(prototype, properties, guard)) {
+    properties = undefined;
+  }
+  return properties ? baseAssign(result, properties) : result;
+}
+
+module.exports = create;
+
+},{"../internal/baseAssign":8,"../internal/baseCreate":10,"../internal/isIterateeCall":20}],34:[function(require,module,exports){
 var getNative = require('../internal/getNative'),
     isArrayLike = require('../internal/isArrayLike'),
     isObject = require('../lang/isObject'),
@@ -685,7 +937,7 @@ var keys = !nativeKeys ? shimKeys : function(object) {
 
 module.exports = keys;
 
-},{"../internal/getNative":14,"../internal/isArrayLike":15,"../internal/shimKeys":19,"../lang/isObject":25}],27:[function(require,module,exports){
+},{"../internal/getNative":17,"../internal/isArrayLike":18,"../internal/shimKeys":26,"../lang/isObject":32}],35:[function(require,module,exports){
 var isArguments = require('../lang/isArguments'),
     isArray = require('../lang/isArray'),
     isIndex = require('../internal/isIndex'),
@@ -751,26 +1003,385 @@ function keysIn(object) {
 
 module.exports = keysIn;
 
-},{"../internal/isIndex":16,"../internal/isLength":17,"../lang/isArguments":21,"../lang/isArray":22,"../lang/isObject":25}],28:[function(require,module,exports){
+},{"../internal/isIndex":19,"../internal/isLength":21,"../lang/isArguments":27,"../lang/isArray":28,"../lang/isObject":32}],36:[function(require,module,exports){
+var baseToString = require('../internal/baseToString'),
+    escapeHtmlChar = require('../internal/escapeHtmlChar');
+
+/** Used to match HTML entities and HTML characters. */
+var reUnescapedHtml = /[&<>"'`]/g,
+    reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+
 /**
- * This method returns the first argument provided to it.
+ * Converts the characters "&", "<", ">", '"', "'", and "\`", in `string` to
+ * their corresponding HTML entities.
+ *
+ * **Note:** No other characters are escaped. To escape additional characters
+ * use a third-party library like [_he_](https://mths.be/he).
+ *
+ * Though the ">" character is escaped for symmetry, characters like
+ * ">" and "/" don't need escaping in HTML and have no special meaning
+ * unless they're part of a tag or unquoted attribute value.
+ * See [Mathias Bynens's article](https://mathiasbynens.be/notes/ambiguous-ampersands)
+ * (under "semi-related fun fact") for more details.
+ *
+ * Backticks are escaped because in Internet Explorer < 9, they can break out
+ * of attribute values or HTML comments. See [#59](https://html5sec.org/#59),
+ * [#102](https://html5sec.org/#102), [#108](https://html5sec.org/#108), and
+ * [#133](https://html5sec.org/#133) of the [HTML5 Security Cheatsheet](https://html5sec.org/)
+ * for more details.
+ *
+ * When working with HTML you should always [quote attribute values](http://wonko.com/post/html-escaping)
+ * to reduce XSS vectors.
+ *
+ * @static
+ * @memberOf _
+ * @category String
+ * @param {string} [string=''] The string to escape.
+ * @returns {string} Returns the escaped string.
+ * @example
+ *
+ * _.escape('fred, barney, & pebbles');
+ * // => 'fred, barney, &amp; pebbles'
+ */
+function escape(string) {
+  // Reset `lastIndex` because in IE < 9 `String#replace` does not.
+  string = baseToString(string);
+  return (string && reHasUnescapedHtml.test(string))
+    ? string.replace(reUnescapedHtml, escapeHtmlChar)
+    : string;
+}
+
+module.exports = escape;
+
+},{"../internal/baseToString":12,"../internal/escapeHtmlChar":14}],37:[function(require,module,exports){
+var assignOwnDefaults = require('../internal/assignOwnDefaults'),
+    assignWith = require('../internal/assignWith'),
+    attempt = require('../utility/attempt'),
+    baseAssign = require('../internal/baseAssign'),
+    baseToString = require('../internal/baseToString'),
+    baseValues = require('../internal/baseValues'),
+    escapeStringChar = require('../internal/escapeStringChar'),
+    isError = require('../lang/isError'),
+    isIterateeCall = require('../internal/isIterateeCall'),
+    keys = require('../object/keys'),
+    reInterpolate = require('../internal/reInterpolate'),
+    templateSettings = require('./templateSettings');
+
+/** Used to match empty string literals in compiled template source. */
+var reEmptyStringLeading = /\b__p \+= '';/g,
+    reEmptyStringMiddle = /\b(__p \+=) '' \+/g,
+    reEmptyStringTrailing = /(__e\(.*?\)|\b__t\)) \+\n'';/g;
+
+/** Used to match [ES template delimiters](http://ecma-international.org/ecma-262/6.0/#sec-template-literal-lexical-components). */
+var reEsTemplate = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
+
+/** Used to ensure capturing order of template delimiters. */
+var reNoMatch = /($^)/;
+
+/** Used to match unescaped characters in compiled string literals. */
+var reUnescapedString = /['\n\r\u2028\u2029\\]/g;
+
+/**
+ * Creates a compiled template function that can interpolate data properties
+ * in "interpolate" delimiters, HTML-escape interpolated data properties in
+ * "escape" delimiters, and execute JavaScript in "evaluate" delimiters. Data
+ * properties may be accessed as free variables in the template. If a setting
+ * object is provided it takes precedence over `_.templateSettings` values.
+ *
+ * **Note:** In the development build `_.template` utilizes
+ * [sourceURLs](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/#toc-sourceurl)
+ * for easier debugging.
+ *
+ * For more information on precompiling templates see
+ * [lodash's custom builds documentation](https://lodash.com/custom-builds).
+ *
+ * For more information on Chrome extension sandboxes see
+ * [Chrome's extensions documentation](https://developer.chrome.com/extensions/sandboxingEval).
+ *
+ * @static
+ * @memberOf _
+ * @category String
+ * @param {string} [string=''] The template string.
+ * @param {Object} [options] The options object.
+ * @param {RegExp} [options.escape] The HTML "escape" delimiter.
+ * @param {RegExp} [options.evaluate] The "evaluate" delimiter.
+ * @param {Object} [options.imports] An object to import into the template as free variables.
+ * @param {RegExp} [options.interpolate] The "interpolate" delimiter.
+ * @param {string} [options.sourceURL] The sourceURL of the template's compiled source.
+ * @param {string} [options.variable] The data object variable name.
+ * @param- {Object} [otherOptions] Enables the legacy `options` param signature.
+ * @returns {Function} Returns the compiled template function.
+ * @example
+ *
+ * // using the "interpolate" delimiter to create a compiled template
+ * var compiled = _.template('hello <%= user %>!');
+ * compiled({ 'user': 'fred' });
+ * // => 'hello fred!'
+ *
+ * // using the HTML "escape" delimiter to escape data property values
+ * var compiled = _.template('<b><%- value %></b>');
+ * compiled({ 'value': '<script>' });
+ * // => '<b>&lt;script&gt;</b>'
+ *
+ * // using the "evaluate" delimiter to execute JavaScript and generate HTML
+ * var compiled = _.template('<% _.forEach(users, function(user) { %><li><%- user %></li><% }); %>');
+ * compiled({ 'users': ['fred', 'barney'] });
+ * // => '<li>fred</li><li>barney</li>'
+ *
+ * // using the internal `print` function in "evaluate" delimiters
+ * var compiled = _.template('<% print("hello " + user); %>!');
+ * compiled({ 'user': 'barney' });
+ * // => 'hello barney!'
+ *
+ * // using the ES delimiter as an alternative to the default "interpolate" delimiter
+ * var compiled = _.template('hello ${ user }!');
+ * compiled({ 'user': 'pebbles' });
+ * // => 'hello pebbles!'
+ *
+ * // using custom template delimiters
+ * _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
+ * var compiled = _.template('hello {{ user }}!');
+ * compiled({ 'user': 'mustache' });
+ * // => 'hello mustache!'
+ *
+ * // using backslashes to treat delimiters as plain text
+ * var compiled = _.template('<%= "\\<%- value %\\>" %>');
+ * compiled({ 'value': 'ignored' });
+ * // => '<%- value %>'
+ *
+ * // using the `imports` option to import `jQuery` as `jq`
+ * var text = '<% jq.each(users, function(user) { %><li><%- user %></li><% }); %>';
+ * var compiled = _.template(text, { 'imports': { 'jq': jQuery } });
+ * compiled({ 'users': ['fred', 'barney'] });
+ * // => '<li>fred</li><li>barney</li>'
+ *
+ * // using the `sourceURL` option to specify a custom sourceURL for the template
+ * var compiled = _.template('hello <%= user %>!', { 'sourceURL': '/basic/greeting.jst' });
+ * compiled(data);
+ * // => find the source of "greeting.jst" under the Sources tab or Resources panel of the web inspector
+ *
+ * // using the `variable` option to ensure a with-statement isn't used in the compiled template
+ * var compiled = _.template('hi <%= data.user %>!', { 'variable': 'data' });
+ * compiled.source;
+ * // => function(data) {
+ * //   var __t, __p = '';
+ * //   __p += 'hi ' + ((__t = ( data.user )) == null ? '' : __t) + '!';
+ * //   return __p;
+ * // }
+ *
+ * // using the `source` property to inline compiled templates for meaningful
+ * // line numbers in error messages and a stack trace
+ * fs.writeFileSync(path.join(cwd, 'jst.js'), '\
+ *   var JST = {\
+ *     "main": ' + _.template(mainText).source + '\
+ *   };\
+ * ');
+ */
+function template(string, options, otherOptions) {
+  // Based on John Resig's `tmpl` implementation (http://ejohn.org/blog/javascript-micro-templating/)
+  // and Laura Doktorova's doT.js (https://github.com/olado/doT).
+  var settings = templateSettings.imports._.templateSettings || templateSettings;
+
+  if (otherOptions && isIterateeCall(string, options, otherOptions)) {
+    options = otherOptions = undefined;
+  }
+  string = baseToString(string);
+  options = assignWith(baseAssign({}, otherOptions || options), settings, assignOwnDefaults);
+
+  var imports = assignWith(baseAssign({}, options.imports), settings.imports, assignOwnDefaults),
+      importsKeys = keys(imports),
+      importsValues = baseValues(imports, importsKeys);
+
+  var isEscaping,
+      isEvaluating,
+      index = 0,
+      interpolate = options.interpolate || reNoMatch,
+      source = "__p += '";
+
+  // Compile the regexp to match each delimiter.
+  var reDelimiters = RegExp(
+    (options.escape || reNoMatch).source + '|' +
+    interpolate.source + '|' +
+    (interpolate === reInterpolate ? reEsTemplate : reNoMatch).source + '|' +
+    (options.evaluate || reNoMatch).source + '|$'
+  , 'g');
+
+  // Use a sourceURL for easier debugging.
+  var sourceURL = 'sourceURL' in options ? '//# sourceURL=' + options.sourceURL + '\n' : '';
+
+  string.replace(reDelimiters, function(match, escapeValue, interpolateValue, esTemplateValue, evaluateValue, offset) {
+    interpolateValue || (interpolateValue = esTemplateValue);
+
+    // Escape characters that can't be included in string literals.
+    source += string.slice(index, offset).replace(reUnescapedString, escapeStringChar);
+
+    // Replace delimiters with snippets.
+    if (escapeValue) {
+      isEscaping = true;
+      source += "' +\n__e(" + escapeValue + ") +\n'";
+    }
+    if (evaluateValue) {
+      isEvaluating = true;
+      source += "';\n" + evaluateValue + ";\n__p += '";
+    }
+    if (interpolateValue) {
+      source += "' +\n((__t = (" + interpolateValue + ")) == null ? '' : __t) +\n'";
+    }
+    index = offset + match.length;
+
+    // The JS engine embedded in Adobe products requires returning the `match`
+    // string in order to produce the correct `offset` value.
+    return match;
+  });
+
+  source += "';\n";
+
+  // If `variable` is not specified wrap a with-statement around the generated
+  // code to add the data object to the top of the scope chain.
+  var variable = options.variable;
+  if (!variable) {
+    source = 'with (obj) {\n' + source + '\n}\n';
+  }
+  // Cleanup code by stripping empty strings.
+  source = (isEvaluating ? source.replace(reEmptyStringLeading, '') : source)
+    .replace(reEmptyStringMiddle, '$1')
+    .replace(reEmptyStringTrailing, '$1;');
+
+  // Frame code as the function body.
+  source = 'function(' + (variable || 'obj') + ') {\n' +
+    (variable
+      ? ''
+      : 'obj || (obj = {});\n'
+    ) +
+    "var __t, __p = ''" +
+    (isEscaping
+       ? ', __e = _.escape'
+       : ''
+    ) +
+    (isEvaluating
+      ? ', __j = Array.prototype.join;\n' +
+        "function print() { __p += __j.call(arguments, '') }\n"
+      : ';\n'
+    ) +
+    source +
+    'return __p\n}';
+
+  var result = attempt(function() {
+    return Function(importsKeys, sourceURL + 'return ' + source).apply(undefined, importsValues);
+  });
+
+  // Provide the compiled function's source by its `toString` method or
+  // the `source` property as a convenience for inlining compiled templates.
+  result.source = source;
+  if (isError(result)) {
+    throw result;
+  }
+  return result;
+}
+
+module.exports = template;
+
+},{"../internal/assignOwnDefaults":6,"../internal/assignWith":7,"../internal/baseAssign":8,"../internal/baseToString":12,"../internal/baseValues":13,"../internal/escapeStringChar":15,"../internal/isIterateeCall":20,"../internal/reInterpolate":25,"../lang/isError":29,"../object/keys":34,"../utility/attempt":39,"./templateSettings":38}],38:[function(require,module,exports){
+var escape = require('./escape'),
+    reEscape = require('../internal/reEscape'),
+    reEvaluate = require('../internal/reEvaluate'),
+    reInterpolate = require('../internal/reInterpolate');
+
+/**
+ * By default, the template delimiters used by lodash are like those in
+ * embedded Ruby (ERB). Change the following template settings to use
+ * alternative delimiters.
+ *
+ * @static
+ * @memberOf _
+ * @type Object
+ */
+var templateSettings = {
+
+  /**
+   * Used to detect `data` property values to be HTML-escaped.
+   *
+   * @memberOf _.templateSettings
+   * @type RegExp
+   */
+  'escape': reEscape,
+
+  /**
+   * Used to detect code to be evaluated.
+   *
+   * @memberOf _.templateSettings
+   * @type RegExp
+   */
+  'evaluate': reEvaluate,
+
+  /**
+   * Used to detect `data` property values to inject.
+   *
+   * @memberOf _.templateSettings
+   * @type RegExp
+   */
+  'interpolate': reInterpolate,
+
+  /**
+   * Used to reference the data object in the template text.
+   *
+   * @memberOf _.templateSettings
+   * @type string
+   */
+  'variable': '',
+
+  /**
+   * Used to import variables into the compiled template.
+   *
+   * @memberOf _.templateSettings
+   * @type Object
+   */
+  'imports': {
+
+    /**
+     * A reference to the `lodash` function.
+     *
+     * @memberOf _.templateSettings.imports
+     * @type Function
+     */
+    '_': { 'escape': escape }
+  }
+};
+
+module.exports = templateSettings;
+
+},{"../internal/reEscape":23,"../internal/reEvaluate":24,"../internal/reInterpolate":25,"./escape":36}],39:[function(require,module,exports){
+var isError = require('../lang/isError'),
+    restParam = require('../function/restParam');
+
+/**
+ * Attempts to invoke `func`, returning either the result or the caught error
+ * object. Any additional arguments are provided to `func` when it's invoked.
  *
  * @static
  * @memberOf _
  * @category Utility
- * @param {*} value Any value.
- * @returns {*} Returns `value`.
+ * @param {Function} func The function to attempt.
+ * @returns {*} Returns the `func` result or error object.
  * @example
  *
- * var object = { 'user': 'fred' };
+ * // avoid throwing errors for invalid selectors
+ * var elements = _.attempt(function(selector) {
+ *   return document.querySelectorAll(selector);
+ * }, '>_>');
  *
- * _.identity(object) === object;
- * // => true
+ * if (_.isError(elements)) {
+ *   elements = [];
+ * }
  */
-function identity(value) {
-  return value;
-}
+var attempt = restParam(function(func, args) {
+  try {
+    return func.apply(undefined, args);
+  } catch(e) {
+    return isError(e) ? e : new Error(e);
+  }
+});
 
-module.exports = identity;
+module.exports = attempt;
 
-},{}]},{},[1]);
+},{"../function/restParam":5,"../lang/isError":29}]},{},[4]);
