@@ -41,8 +41,19 @@ button {
 }
 
 /*
+ * FILTERS
+ */
+.recipe-filter form {
+  margin: 0;
+}
+
+/*
  * PAGE PROPERTIES
  */
 .page-heading {
   border-bottom: 1px solid #ddd;
+}
+.page-heading .recipe-filter {
+  bottom: -16px;
+  position: relative;
 }
