@@ -95,7 +95,7 @@ RecipeCard.prototype.render = function(data) {
 
 module.exports = RecipeCard;
 },{"../../base":1,"./template.html":3,"lodash/object/create":45}],3:[function(require,module,exports){
-module.exports = "<div class=\"card recipe-card\">\n  <div class=\"card-title\">\n    <h3><%= title %></h3>\n  </div>\n\n  <div class=\"card-content\">\n    <%- description %>\n  </div>\n</div>";
+module.exports = "<div class=\"card recipe-card\">\n  <div class=\"card-title\">\n    <h3><%= title %></h3>\n  </div>\n\n  <div class=\"card-content\">\n    <p><%- description %></p>\n    <p class=\"small\">posted by <%= user.username %></p>\n  </div>\n</div>";
 
 },{}],4:[function(require,module,exports){
 var BaseComponent = require('../../base');
