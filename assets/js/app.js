@@ -210,6 +210,7 @@ module.exports = RecipeList;
 },{"../../base":1,"../card":4,"lodash/create":106,"lodash/each":107}],7:[function(require,module,exports){
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
+var forEach = require('lodash/each');
 
 //
 // Constructor for the tag totals component
@@ -234,13 +235,28 @@ TagTotals.prototype.getTemplate = function() {
 
 //
 // Override the render() method
+// This will fetch the list of tags and append
+// them into the template provided
 //
 TagTotals.prototype.render = function(data) {
+  var frag = document.createDocumentFragment();
   this.el.innerHTML = this.template(data);
+  window.fetch('http://127.0.0.1:3000/tags')
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(tags) {
+      forEach(tags, function(tag) {
+        var li = document.createElement('li');
+        li.innerHTML = tag.title + ' <span class="badge badge-primary">' + tag.total + '</span>';
+        frag.appendChild(li);
+      });
+      this.el.querySelector('ul').appendChild(frag);
+    }.bind(this));
 };
 
 module.exports = TagTotals;
-},{"../../base":1,"./template.html":8,"lodash/create":106}],8:[function(require,module,exports){
+},{"../../base":1,"./template.html":8,"lodash/create":106,"lodash/each":107}],8:[function(require,module,exports){
 module.exports = "<ul class=\"list-flat recipe-tag-totals\">\n    <li></li>\n</ul>";
 
 },{}],9:[function(require,module,exports){
