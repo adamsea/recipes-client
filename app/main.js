@@ -12,3 +12,9 @@ var filter = new RecipeFilter({
 filter.render({
   placeholder: 'Filter Recipes by User'
 });
+
+var TagTotals = require('./components/tags/totals');
+var tags = new TagTotals({
+  el: '.tag-totals'
+});
+tags.render();
