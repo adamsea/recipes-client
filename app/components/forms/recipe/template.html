@@ -8,7 +8,10 @@
       <textarea maxlength="250" name="description" placeholder="Description (max 250 characters)" rows="5"></textarea>
     </section>
     <section>
-      <input type="text" maxlength="50" name="tags" placeholder="Add Tags">
+      <input type="text" maxlength="50" name="tagsinput" placeholder="Add Tag and Press Enter">
+      <input type="hidden" name="tags">
+      <div class="recipe-labels">
+      </div>
     </section>
     <section>
       <button type="submit" round>Add Recipe</button>

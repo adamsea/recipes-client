@@ -1,6 +1,7 @@
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
 var uniqBy = require('lodash/uniqBy');
+var without = require('lodash/without');
 
 //
 // Constructor for the modal form component
@@ -27,12 +28,43 @@ RecipeForm.prototype.init = function(config) {
 // Add a tag to the list
 //
 RecipeForm.prototype.addTag = function(tag) {
+  var recipeLabel = document.createElement('span');
+  var removeLabel = document.createElement('span');
+  var recipeLabels = this.el.querySelector('.recipe-labels');
+  var recipeTags = this.el.querySelector('input[name="tags"]');
+
+  // Add to our hidden form field
+  var tags = [];
+  if (recipeTags.value.trim()) {
+    tags = recipeTags.value.trim().split(/,/);
+  }
+  tags.push(tag);
+  recipeTags.value = tags.join(',');
+
+  // Add to our display of recipe tags
+  recipeLabel.textContent = tag;
+  recipeLabel.className = 'label label-default';
+  removeLabel.innerHTML = '&#x2715;';
+  removeLabel.className = 'label-close';
+  recipeLabel.appendChild(removeLabel);
+  recipeLabels.appendChild(recipeLabel);
+
+  // Remove a tag on click
+  removeLabel.addEventListener('click', this.removeTag.bind(this, recipeLabel, tag), false);
 };
 
 //
 // Remove a tag from the list
 //
 RecipeForm.prototype.removeTag = function(recipeLabel, tag) {
+  var recipeTags = this.el.querySelector('input[name="tags"]');
+
+  // Remove from our hidden form field
+  var tags = without(recipeTags.value.trim().split(/,/), tag);
+  recipeTags.value = tags.join(',');
+
+  // Remove from our display of tags
+  this.el.querySelector('.recipe-labels').removeChild(recipeLabel);
 };
 
 //
@@ -44,7 +76,7 @@ RecipeForm.prototype.createRecipe = function(ev) {
   var title = form.elements.title.value.trim();
   var description = form.elements.description.value.trim();
   var tags = form.elements.tags.value.trim();
-  tags = tags && tags.split(/\s+/) || [];
+  tags = tags && tags.split(/,/) || [];
 
   if (title && description) {
     window.fetch('http://127.0.0.1:3000/recipes', {
@@ -82,6 +114,14 @@ RecipeForm.prototype.getTemplate = function() {
 //
 RecipeForm.prototype.render = function(data) {
   this.el.innerHTML = this.template(data);
+  this.el.querySelector('input[name="tagsinput"]').addEventListener('keypress', function(ev) {
+    var tag = ev.target.value.trim();
+    if (ev.keyCode === 13 && tag !== '') {
+      ev.preventDefault();
+      this.addTag(tag);
+      this.el.querySelector('input[name="tagsinput"]').value = '';
+    }
+  }.bind(this), false);
 };
 
 module.exports = RecipeForm;
