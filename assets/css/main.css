@@ -57,3 +57,20 @@ button {
   bottom: -16px;
   position: relative;
 }
+
+/*
+ * LABELS
+ */
+.label .label-close {
+  cursor: pointer;
+  font-weight: bold;
+  margin: 0 1px;
+  padding: 3px;
+}
+
+/*
+ * FORMS
+ */
+form .label {
+  margin: 0 3px;
+}

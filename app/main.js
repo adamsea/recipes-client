@@ -18,3 +18,9 @@ var tags = new TagTotals({
   el: '.tag-totals'
 });
 tags.render();
+
+var RecipeForm = require('./components/forms/recipe');
+var recipeForm = new RecipeForm({
+  el: '.recipe-form'
+});
+recipeForm.render();
