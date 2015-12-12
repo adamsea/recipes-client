@@ -1,5 +1,6 @@
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
+var forEach = require('lodash/each');
 
 //
 // Constructor for the recipe card
@@ -33,7 +34,15 @@ RecipeCard.prototype.getTemplate = function() {
 // Override the render() method
 //
 RecipeCard.prototype.render = function(data) {
+  var frag = document.createDocumentFragment();
   this.el.innerHTML = this.template(data);
+  forEach(data.tags, function(tag) {
+    var span = document.createElement('span');
+    span.className = 'label label-default tag';
+    span.textContent = tag.title;
+    frag.appendChild(span);
+  });
+  this.el.querySelector('.tags').appendChild(frag);
 };
 
 module.exports = RecipeCard;

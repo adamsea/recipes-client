@@ -216,6 +216,7 @@ module.exports = "<form method=\"post\" action=\"\" class=\"forms\">\n  <fieldse
 },{}],6:[function(require,module,exports){
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
+var forEach = require('lodash/each');
 
 //
 // Constructor for the recipe card
@@ -249,11 +250,19 @@ RecipeCard.prototype.getTemplate = function() {
 // Override the render() method
 //
 RecipeCard.prototype.render = function(data) {
+  var frag = document.createDocumentFragment();
   this.el.innerHTML = this.template(data);
+  forEach(data.tags, function(tag) {
+    var span = document.createElement('span');
+    span.className = 'label label-default tag';
+    span.textContent = tag.title;
+    frag.appendChild(span);
+  });
+  this.el.querySelector('.tags').appendChild(frag);
 };
 
 module.exports = RecipeCard;
-},{"../../base":1,"./template.html":7,"lodash/create":117}],7:[function(require,module,exports){
+},{"../../base":1,"./template.html":7,"lodash/create":117,"lodash/each":118}],7:[function(require,module,exports){
 module.exports = "<div class=\"card recipe-card\" data-filter-item>\n  <div class=\"card-title\">\n    <h3><%= title %></h3>\n  </div>\n\n  <div class=\"card-content\">\n    <p><%- description %></p>\n    <p class=\"small\">posted by <span data-filter-text><%= user.username %></span></p>\n    <p class=\"tags\"></p>\n  </div>\n</div>";
 
 },{}],8:[function(require,module,exports){
