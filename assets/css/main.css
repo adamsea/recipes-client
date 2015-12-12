@@ -39,6 +39,13 @@ button {
   object-fit: cover;
   width: 100%;
 }
+.card-content .tags {
+  overflow: hidden;
+}
+.card-content .tag {
+  float: left;
+  margin: 3px;
+}
 
 /*
  * FILTERS
