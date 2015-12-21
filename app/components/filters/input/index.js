@@ -14,7 +14,13 @@ function FilterInput(config) {
 // Inherit from the BaseComponent
 //
 FilterInput.prototype = create(BaseComponent.prototype, {
-  constructor: FilterInput
+
+  constructor: FilterInput,
+
+  events: {
+    'input': ['filterItems', '.filter-input-form input']
+  }
+
 });
 
 //
@@ -22,7 +28,6 @@ FilterInput.prototype = create(BaseComponent.prototype, {
 //
 FilterInput.prototype.init = function(config) {
   this.filter = config.filter || '.filter-items';
-  this.el.addEventListener('input', this.filterItems.bind(this), false);
 };
 
 //

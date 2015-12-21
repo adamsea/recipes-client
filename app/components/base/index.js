@@ -1,3 +1,7 @@
+var assign = require('lodash/assign');
+var forEach = require('lodash/each');
+var isElement = require('lodash/isElement');
+var isString = require('lodash/isString');
 var template = require('lodash/template');
 
 //
@@ -6,8 +10,15 @@ var template = require('lodash/template');
 // and call any initialization logic for the component.
 //
 function BaseComponent(config) {
-  this.el = (config.el instanceof HTMLElement) && config.el || document.querySelector(config.el);
+  // Set root element and html
+  this.el = isElement(config.el) && config.el || document.querySelector(config.el);
   this.template = template(this.getTemplate());
+
+  // Set event listeners
+  this.events = assign(this.events || {}, config.events);
+  this.addEventListeners();
+
+  // Custom component initialization
   this.init(config);
 }
 
@@ -18,6 +29,34 @@ function BaseComponent(config) {
 //
 BaseComponent.prototype.init = function(config) {
   // Override this method
+};
+
+//
+// Add event listeners for the component
+//
+BaseComponent.prototype.addEventListeners = function() {
+  forEach(this.events, this.addListener.bind(this));
+};
+
+//
+// Add each event listener
+// Events should be of the format
+// eventType: [handlerFunc, selector]
+//
+BaseComponent.prototype.addListener = function(params, eventType) {
+  var handlerFunc = params[0];
+  var selector = params[1];
+
+  this.el.addEventListener(eventType, function(ev) {
+    var node;
+    if (selector) {
+      node = this.el.querySelector(selector);
+      if (node !== ev.target) {
+        return true;
+      }
+    }
+    return isString(handlerFunc) ? this[handlerFunc](ev) : handlerFunc.call(this, ev);
+  }.bind(this), false);
 };
 
 //
