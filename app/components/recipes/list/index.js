@@ -23,6 +23,7 @@ RecipeList.prototype = create(BaseComponent.prototype, {
 // recipe in the list to a RecipeCard component.
 //
 RecipeList.prototype.render = function() {
+  this.clear();
   window.fetch('http://127.0.0.1:3000/recipes?_expand=user')
     .then(function(response) {
       return response.json();

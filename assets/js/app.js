@@ -53,7 +53,17 @@ BaseComponent.prototype.render = function(data) {
   // Override this method
 };
 
+//
+// Clear the dom for this component.
+//
+BaseComponent.prototype.clear = function() {
+  while (this.el.hasChildNodes()) {
+    this.el.removeChild(this.el.firstChild);
+  }
+}
+
 module.exports = BaseComponent;
+
 },{"lodash/template":147}],2:[function(require,module,exports){
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
@@ -332,6 +342,7 @@ RecipeList.prototype = create(BaseComponent.prototype, {
 // recipe in the list to a RecipeCard component.
 //
 RecipeList.prototype.render = function() {
+  this.clear();
   window.fetch('http://127.0.0.1:3000/recipes?_expand=user')
     .then(function(response) {
       return response.json();

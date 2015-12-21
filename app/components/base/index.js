@@ -52,4 +52,13 @@ BaseComponent.prototype.render = function(data) {
   // Override this method
 };
 
+//
+// Clear the dom for this component.
+//
+BaseComponent.prototype.clear = function() {
+  while (this.el.hasChildNodes()) {
+    this.el.removeChild(this.el.firstChild);
+  }
+}
+
 module.exports = BaseComponent;
