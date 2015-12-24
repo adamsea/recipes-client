@@ -1,7 +1,9 @@
-var assign = require('lodash/assign');
+var assignWith = require('lodash/assignWith');
 var forEach = require('lodash/each');
+var isArray = require('lodash/isArray');
 var isElement = require('lodash/isElement');
 var isString = require('lodash/isString');
+var isUndefined = require('lodash/isUndefined');
 var template = require('lodash/template');
 
 //
@@ -15,7 +17,12 @@ function BaseComponent(config) {
   this.template = template(this.getTemplate());
 
   // Set event listeners
-  this.events = assign(this.events || {}, config.events);
+  this.events = assignWith(this.events || {}, config.events, function(value, source, key) {
+    if (value && source) {
+      return [value, source];
+    }
+    return isUndefined(source) ? value : source;
+  });
   this.addEventListeners();
 
   // Custom component initialization
@@ -33,9 +40,19 @@ BaseComponent.prototype.init = function(config) {
 
 //
 // Add event listeners for the component
+// Handles multiple event handlers for the same eventType
 //
 BaseComponent.prototype.addEventListeners = function() {
-  forEach(this.events, this.addListener.bind(this));
+  forEach(this.events, function(params, eventType) {
+    if (!isArray(params[0])) {
+      this.addListener(params, eventType);
+    }
+    else {
+      forEach(params, function(arrParams) {
+        this.addListener(arrParams, eventType);
+      }.bind(this));
+    }
+  }.bind(this));
 };
 
 //

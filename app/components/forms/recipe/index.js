@@ -14,15 +14,14 @@ function RecipeForm(config) {
 // Inherit from the BaseComponent
 //
 RecipeForm.prototype = create(BaseComponent.prototype, {
-  constructor: RecipeForm
-});
 
-//
-// Override the init() method
-//
-RecipeForm.prototype.init = function(config) {
-  this.el.addEventListener('submit', this.createRecipe.bind(this), false);
-};
+  constructor: RecipeForm,
+
+  events: {
+    'submit': ['createRecipe']
+  }
+
+});
 
 //
 // Add a tag to the list

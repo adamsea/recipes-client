@@ -21,6 +21,11 @@ tags.render();
 
 var RecipeForm = require('./components/forms/recipe');
 var recipeForm = new RecipeForm({
-  el: '.recipe-form'
+  el: '.recipe-form',
+  events: {
+    'submit': [function(ev) {
+      setTimeout(list.render.bind(list), 100);
+    }]
+  }
 });
 recipeForm.render();
