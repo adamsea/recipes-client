@@ -479,12 +479,7 @@ tags.render();
 
 var RecipeForm = require('./components/forms/recipe');
 var recipeForm = new RecipeForm({
-  el: '.recipe-form',
-  events: {
-    'submit': [function(ev) {
-      setTimeout(list.render.bind(list), 100);
-    }]
-  }
+  el: '.recipe-form'
 });
 recipeForm.render();
 },{"./components/filters/input":2,"./components/forms/recipe":4,"./components/recipes/list":8,"./components/tags/totals":9}],12:[function(require,module,exports){
