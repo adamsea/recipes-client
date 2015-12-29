@@ -1,4 +1,4 @@
-var BaseComponent = require('../../base');
+var BaseInput = require('../../base/input');
 var create = require('lodash/create');
 var forEach = require('lodash/each');
 var reduce = require('lodash/reduce');
@@ -7,13 +7,13 @@ var reduce = require('lodash/reduce');
 // Constructor for the input filter component
 //
 function FilterInput(config) {
-  BaseComponent.call(this, config);
+  BaseInput.call(this, config);
 }
 
 //
-// Inherit from the BaseComponent
+// Inherit from the BaseInput
 //
-FilterInput.prototype = create(BaseComponent.prototype, {
+FilterInput.prototype = create(BaseInput.prototype, {
 
   constructor: FilterInput,
 
@@ -28,6 +28,7 @@ FilterInput.prototype = create(BaseComponent.prototype, {
 //
 FilterInput.prototype.init = function(config) {
   this.filter = config.filter || '.filter-items';
+  return BaseInput.prototype.init.call(this, config);
 };
 
 //
@@ -50,20 +51,6 @@ FilterInput.prototype.filterItem = function(text, item) {
   }, '');
   var regexp = new RegExp(text);
   item.style.display = allText.match(regexp) ? '' : 'none';
-};
-
-//
-// Override the getTemplate() method
-//
-FilterInput.prototype.getTemplate = function() {
-  return require('./template.html');
-};
-
-//
-// Override the render() method
-//
-FilterInput.prototype.render = function(data) {
-  this.el.innerHTML = this.template(data);
 };
 
 module.exports = FilterInput;

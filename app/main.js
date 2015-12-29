@@ -7,11 +7,11 @@ list.render();
 var RecipeFilter = require('./components/filters/input');
 var filter = new RecipeFilter({
   el: '.recipe-filter',
-  filter: '.recipe-list'
-});
-filter.render({
+  filter: '.recipe-list',
+  formClass: 'filter-input-form',
   placeholder: 'Filter Recipes by User'
 });
+filter.render();
 
 var TagTotals = require('./components/tags/totals');
 var tags = new TagTotals({
