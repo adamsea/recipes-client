@@ -13,6 +13,12 @@ var filter = new RecipeFilter({
 });
 filter.render();
 
+var RecipeInputSelector = require('./components/recipes/input/selector');
+var inputSelector = new RecipeInputSelector({
+  el: '.recipe-input-selector'
+});
+inputSelector.render();
+
 var TagTotals = require('./components/tags/totals');
 var tags = new TagTotals({
   el: '.tag-totals'

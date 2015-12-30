@@ -60,7 +60,8 @@ button {
 .page-heading {
   border-bottom: 1px solid #ddd;
 }
-.page-heading .recipe-filter {
+.page-heading .recipe-input,
+.page-heading .recipe-input-selector {
   bottom: -16px;
   position: relative;
 }
