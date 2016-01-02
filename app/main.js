@@ -13,6 +13,19 @@ var filter = new RecipeFilter({
 });
 filter.render();
 
+var RecipeSearch = require('./components/recipes/search');
+var search = new RecipeSearch({
+  el: '.recipe-search',
+  formClass: 'search-input-form',
+  placeholder: 'Search Recipes',
+  events: {
+    'recipesearch': [function(ev) {
+      list.render(ev.detail);
+    }]
+  }
+});
+search.render();
+
 var RecipeInputSelector = require('./components/recipes/input/selector');
 var inputSelector = new RecipeInputSelector({
   el: '.recipe-input-selector'
