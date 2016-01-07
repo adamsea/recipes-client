@@ -1,6 +1,7 @@
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
 var forEach = require('lodash/each');
+var pad = require('lodash/pad');
 
 //
 // Constructor for the recipe card
@@ -13,7 +14,17 @@ function RecipeCard(config) {
 // Inherit from the BaseComponent
 //
 RecipeCard.prototype = create(BaseComponent.prototype, {
-  constructor: RecipeCard
+
+  constructor: RecipeCard,
+
+  //
+  // Free variables to import into the template
+  // Add lodash functions here to use them in templates
+  //
+  templateImports: {
+    pad: pad
+  }
+
 });
 
 //

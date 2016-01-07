@@ -14,7 +14,13 @@ var template = require('lodash/template');
 function BaseComponent(config) {
   // Set root element and html
   this.el = isElement(config.el) && config.el || document.querySelector(config.el);
-  this.template = template(this.getTemplate());
+
+  // Set compiled template
+  var settings = {};
+  if (this.templateImports) {
+    settings.imports = this.templateImports;
+  }
+  this.template = template(this.getTemplate(), settings);
 
   // Set event listeners
   this.events = assignWith(this.events || {}, config.events, function(value, source, key) {

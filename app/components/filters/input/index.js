@@ -2,6 +2,8 @@ var BaseInput = require('../../base/input');
 var create = require('lodash/create');
 var forEach = require('lodash/each');
 var reduce = require('lodash/reduce');
+var escapeRegExp = require('lodash/escapeRegExp');
+var trim = require('lodash/trim');
 
 //
 // Constructor for the input filter component
@@ -37,7 +39,7 @@ FilterInput.prototype.init = function(config) {
 FilterInput.prototype.filterItems = function(ev) {
   var items = document.querySelectorAll(this.filter + ' [data-filter-item]');
   var input = ev.target;
-  var text = input && input.value.trim();
+  var text = input && escapeRegExp(trim(input.value));
   forEach(items, this.filterItem.bind(this, text));
 };
 
@@ -47,7 +49,7 @@ FilterInput.prototype.filterItems = function(ev) {
 FilterInput.prototype.filterItem = function(text, item) {
   var filterTexts = item.querySelectorAll('[data-filter-text]');
   var allText = reduce(filterTexts, function(current, value) {
-    return current += (value.textContent || value.innerText).trim();
+    return current += trim(value.textContent || value.innerText);
   }, '');
   var regexp = new RegExp(text);
   item.style.display = allText.match(regexp) ? '' : 'none';
