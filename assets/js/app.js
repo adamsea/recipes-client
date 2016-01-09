@@ -126,7 +126,7 @@ BaseComponent.prototype.clear = function() {
 
 module.exports = BaseComponent;
 
-},{"lodash/assignWith":127,"lodash/each":131,"lodash/isArray":140,"lodash/isElement":143,"lodash/isString":152,"lodash/isUndefined":155,"lodash/template":166}],2:[function(require,module,exports){
+},{"lodash/assignWith":127,"lodash/each":131,"lodash/isArray":140,"lodash/isElement":143,"lodash/isString":152,"lodash/isUndefined":155,"lodash/template":167}],2:[function(require,module,exports){
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
 var defaults = require('lodash/defaults');
@@ -240,7 +240,7 @@ FilterInput.prototype.filterItem = function(text, item) {
 };
 
 module.exports = FilterInput;
-},{"../../base/input":2,"lodash/create":129,"lodash/each":131,"lodash/escapeRegExp":134,"lodash/reduce":162,"lodash/trim":172}],5:[function(require,module,exports){
+},{"../../base/input":2,"lodash/create":129,"lodash/each":131,"lodash/escapeRegExp":134,"lodash/reduce":163,"lodash/trim":173}],5:[function(require,module,exports){
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
 var uniqBy = require('lodash/uniqBy');
@@ -370,7 +370,7 @@ RecipeForm.prototype.render = function(data) {
 
 module.exports = RecipeForm;
 
-},{"../../base":1,"./template.html":6,"lodash/create":129,"lodash/uniqBy":174,"lodash/without":175}],6:[function(require,module,exports){
+},{"../../base":1,"./template.html":6,"lodash/create":129,"lodash/uniqBy":175,"lodash/without":176}],6:[function(require,module,exports){
 module.exports = "<form method=\"post\" action=\"\" class=\"forms\">\n  <fieldset>\n    <legend>New Recipe</legend>\n    <section>\n      <input class=\"width-6\" maxlength=\"50\" name=\"title\" placeholder=\"Title (max 50 characters)\" type=\"text\" required>\n    </section>\n    <section>\n      <textarea maxlength=\"250\" name=\"description\" placeholder=\"Description (max 250 characters)\" rows=\"5\"></textarea>\n    </section>\n    <section>\n      <input class=\"width-12\" maxlength=\"250\" name=\"image\" placeholder=\"Image URL (max 250 characters)\" type=\"text\">\n    </section>\n    <section>\n      <input type=\"text\" maxlength=\"50\" name=\"tagsinput\" placeholder=\"Add Tag and Press Enter\">\n      <input type=\"hidden\" name=\"tags\">\n      <div class=\"recipe-labels\">\n      </div>\n    </section>\n    <section>\n      <button type=\"submit\" round>Add Recipe</button>\n    </section>\n  </fieldset>\n</form>";
 
 },{}],7:[function(require,module,exports){
@@ -380,6 +380,8 @@ var defaults = require('lodash/defaults');
 var forEach = require('lodash/each');
 var pad = require('lodash/pad');
 var truncate = require('lodash/truncate');
+var parseInt = require('lodash/parseInt');
+var picoModal = require('picomodal/src/picoModal');
 
 //
 // Constructor for the recipe card
@@ -402,16 +404,21 @@ RecipeCard.prototype = create(BaseComponent.prototype, {
   templateImports: {
     pad: pad,
     truncate: truncate
-  }
+  },
+
+  //
+  // Events for the component
+  //
+  events: {
+    'click': ['showMoreDetails', '.card-view-more']
+  },
+
+  //
+  // Modal instance property
+  //
+  modal: null
 
 });
-
-//
-// Override the init() method
-//
-RecipeCard.prototype.init = function(config) {
-  // This will connect events to view recipe details onclick
-};
 
 //
 // Override the getTemplate() method
@@ -435,9 +442,30 @@ RecipeCard.prototype.render = function(data) {
   this.el.querySelector('.tags').appendChild(frag);
 };
 
+//
+// Show the recipe details
+//
+RecipeCard.prototype.showMoreDetails = function(ev) {
+  var recipeId = parseInt(this.el.querySelector('.recipe-card').dataset.recipeId);
+  window.fetch('http://127.0.0.1:3000/recipes/' + recipeId)
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(recipe) {
+      // Create the modal for the first time
+      if (!this.modal) {
+        this.modal = picoModal({
+          content: "This needs to be a call to rendering a template.",
+          closeButton: false
+        });
+      }
+      this.modal.show();
+    }.bind(this));
+};
+
 module.exports = RecipeCard;
-},{"../../base":1,"./template.html":8,"lodash/create":129,"lodash/defaults":130,"lodash/each":131,"lodash/pad":160,"lodash/truncate":173}],8:[function(require,module,exports){
-module.exports = "<div class=\"card recipe-card\" data-filter-item>\n  <div class=\"card-title\">\n    <% if (image) { %>\n      <img src=\"<%= image %>\" alt=\"<%= title %>\">\n    <% } %>\n    <h3><%= title %></h3>\n  </div>\n\n  <div class=\"card-content\">\n    <p><%- truncate(description, 60) %></p>\n    <p class=\"small\"><%= pad('posted by', 10) %><span data-filter-text><%= user.username %></span></p>\n    <p class=\"tags\"></p>\n  </div>\n</div>";
+},{"../../base":1,"./template.html":8,"lodash/create":129,"lodash/defaults":130,"lodash/each":131,"lodash/pad":160,"lodash/parseInt":161,"lodash/truncate":174,"picomodal/src/picoModal":177}],8:[function(require,module,exports){
+module.exports = "<div class=\"card recipe-card\" data-recipe-id=\"<%= id %>\">\n  <div class=\"card-title\">\n    <% if (image) { %>\n      <img src=\"<%= image %>\" alt=\"<%= title %>\">\n    <% } %>\n    <h3><%= title %></h3>\n  </div>\n\n  <div class=\"card-content\">\n    <p><%- truncate(description, 60) %></p>\n    <p class=\"small\"><%= pad('posted by', 10) %><span data-filter-text><%= user.username %></span></p>\n    <p class=\"tags\"></p>\n  </div>\n\n  <div class=\"card-actions\">\n    <button class=\"card-view-more\" outline round small>View More</button>\n  </div>\n</div>";
 
 },{}],9:[function(require,module,exports){
 var BaseComponent = require('../../../base');
@@ -553,6 +581,7 @@ RecipeList.prototype.render = function(term) {
         var card = new RecipeCard({
           el: document.createElement('div')
         });
+        card.el.setAttribute('data-filter-item', true);
         card.render(recipe);
         this.append(card.el);
       }.bind(this));
@@ -601,7 +630,7 @@ SearchInput.prototype = create(BaseInput.prototype, {
 });
 
 module.exports = SearchInput;
-},{"../../base/input":2,"lodash/create":129,"lodash/get":136,"lodash/result":165}],13:[function(require,module,exports){
+},{"../../base/input":2,"lodash/create":129,"lodash/get":136,"lodash/result":166}],13:[function(require,module,exports){
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
 var forEach = require('lodash/each');
@@ -1704,7 +1733,7 @@ function baseIteratee(value) {
 
 module.exports = baseIteratee;
 
-},{"./_baseMatches":58,"./_baseMatchesProperty":59,"./identity":138,"./isArray":140,"./property":161}],56:[function(require,module,exports){
+},{"./_baseMatches":58,"./_baseMatchesProperty":59,"./identity":138,"./isArray":140,"./property":162}],56:[function(require,module,exports){
 /* Built-in method references for those with the same name as other `lodash` methods. */
 var nativeKeys = Object.keys;
 
@@ -2267,7 +2296,7 @@ function createAssigner(assigner) {
 
 module.exports = createAssigner;
 
-},{"./_isIterateeCall":99,"./rest":164}],77:[function(require,module,exports){
+},{"./_isIterateeCall":99,"./rest":165}],77:[function(require,module,exports){
 var isArrayLike = require('./isArrayLike');
 
 /**
@@ -2377,7 +2406,7 @@ function createPadding(string, length, chars) {
 
 module.exports = createPadding;
 
-},{"./_stringSize":123,"./_stringToArray":124,"./repeat":163,"./toInteger":168}],80:[function(require,module,exports){
+},{"./_stringSize":123,"./_stringToArray":124,"./repeat":164,"./toInteger":169}],80:[function(require,module,exports){
 var Set = require('./_Set'),
     noop = require('./noop');
 
@@ -2741,7 +2770,7 @@ function getMatchData(object) {
 
 module.exports = getMatchData;
 
-},{"./_isStrictComparable":103,"./toPairs":170}],88:[function(require,module,exports){
+},{"./_isStrictComparable":103,"./toPairs":171}],88:[function(require,module,exports){
 var isNative = require('./isNative');
 
 /**
@@ -3663,7 +3692,7 @@ function stringToPath(string) {
 
 module.exports = stringToPath;
 
-},{"./toString":171}],126:[function(require,module,exports){
+},{"./toString":172}],126:[function(require,module,exports){
 var copyObjectWith = require('./_copyObjectWith'),
     createAssigner = require('./_createAssigner'),
     keysIn = require('./keysIn');
@@ -3773,7 +3802,7 @@ var attempt = rest(function(func, args) {
 
 module.exports = attempt;
 
-},{"./_apply":26,"./isError":144,"./rest":164}],129:[function(require,module,exports){
+},{"./_apply":26,"./isError":144,"./rest":165}],129:[function(require,module,exports){
 var baseAssign = require('./_baseAssign'),
     baseCreate = require('./_baseCreate');
 
@@ -3848,7 +3877,7 @@ var defaults = rest(function(args) {
 
 module.exports = defaults;
 
-},{"./_apply":26,"./_assignInDefaults":33,"./assignInWith":126,"./rest":164}],131:[function(require,module,exports){
+},{"./_apply":26,"./_assignInDefaults":33,"./assignInWith":126,"./rest":165}],131:[function(require,module,exports){
 module.exports = require('./forEach');
 
 },{"./forEach":135}],132:[function(require,module,exports){
@@ -3937,7 +3966,7 @@ function escape(string) {
 
 module.exports = escape;
 
-},{"./_escapeHtmlChar":84,"./toString":171}],134:[function(require,module,exports){
+},{"./_escapeHtmlChar":84,"./toString":172}],134:[function(require,module,exports){
 var toString = require('./toString');
 
 /** Used to match `RegExp` [syntax characters](http://ecma-international.org/ecma-262/6.0/#sec-patterns). */
@@ -3967,7 +3996,7 @@ function escapeRegExp(string) {
 
 module.exports = escapeRegExp;
 
-},{"./toString":171}],135:[function(require,module,exports){
+},{"./toString":172}],135:[function(require,module,exports){
 var arrayEach = require('./_arrayEach'),
     baseCastFunction = require('./_baseCastFunction'),
     baseEach = require('./_baseEach'),
@@ -4988,7 +5017,57 @@ function pad(string, length, chars) {
 
 module.exports = pad;
 
-},{"./_createPadding":79,"./_stringSize":123,"./toInteger":168,"./toString":171}],161:[function(require,module,exports){
+},{"./_createPadding":79,"./_stringSize":123,"./toInteger":169,"./toString":172}],161:[function(require,module,exports){
+var root = require('./_root'),
+    toString = require('./toString');
+
+/** Used to match leading and trailing whitespace. */
+var reTrim = /^\s+|\s+$/g;
+
+/** Used to detect hexadecimal string values. */
+var reHasHexPrefix = /^0x/i;
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeParseInt = root.parseInt;
+
+/**
+ * Converts `string` to an integer of the specified radix. If `radix` is
+ * `undefined` or `0`, a `radix` of `10` is used unless `value` is a hexadecimal,
+ * in which case a `radix` of `16` is used.
+ *
+ * **Note:** This method aligns with the [ES5 implementation](https://es5.github.io/#x15.1.2.2)
+ * of `parseInt`.
+ *
+ * @static
+ * @memberOf _
+ * @category String
+ * @param {string} string The string to convert.
+ * @param {number} [radix=10] The radix to interpret `value` by.
+ * @param- {Object} [guard] Enables use as an iteratee for functions like `_.map`.
+ * @returns {number} Returns the converted integer.
+ * @example
+ *
+ * _.parseInt('08');
+ * // => 8
+ *
+ * _.map(['6', '08', '10'], _.parseInt);
+ * // => [6, 8, 10]
+ */
+function parseInt(string, radix, guard) {
+  // Chrome fails to trim leading <BOM> whitespace characters.
+  // See https://code.google.com/p/v8/issues/detail?id=3109 for more details.
+  if (guard || radix == null) {
+    radix = 0;
+  } else if (radix) {
+    radix = +radix;
+  }
+  string = toString(string).replace(reTrim, '');
+  return nativeParseInt(string, radix || (reHasHexPrefix.test(string) ? 16 : 10));
+}
+
+module.exports = parseInt;
+
+},{"./_root":116,"./toString":172}],162:[function(require,module,exports){
 var baseProperty = require('./_baseProperty'),
     basePropertyDeep = require('./_basePropertyDeep'),
     isKey = require('./_isKey');
@@ -5020,7 +5099,7 @@ function property(path) {
 
 module.exports = property;
 
-},{"./_baseProperty":60,"./_basePropertyDeep":61,"./_isKey":100}],162:[function(require,module,exports){
+},{"./_baseProperty":60,"./_basePropertyDeep":61,"./_isKey":100}],163:[function(require,module,exports){
 var arrayReduce = require('./_arrayReduce'),
     baseEach = require('./_baseEach'),
     baseIteratee = require('./_baseIteratee'),
@@ -5071,7 +5150,7 @@ function reduce(collection, iteratee, accumulator) {
 
 module.exports = reduce;
 
-},{"./_arrayReduce":31,"./_baseEach":45,"./_baseIteratee":55,"./_baseReduce":62,"./isArray":140}],163:[function(require,module,exports){
+},{"./_arrayReduce":31,"./_baseEach":45,"./_baseIteratee":55,"./_baseReduce":62,"./isArray":140}],164:[function(require,module,exports){
 var toInteger = require('./toInteger'),
     toString = require('./toString');
 
@@ -5124,7 +5203,7 @@ function repeat(string, n) {
 
 module.exports = repeat;
 
-},{"./toInteger":168,"./toString":171}],164:[function(require,module,exports){
+},{"./toInteger":169,"./toString":172}],165:[function(require,module,exports){
 var apply = require('./_apply'),
     toInteger = require('./toInteger');
 
@@ -5187,7 +5266,7 @@ function rest(func, start) {
 
 module.exports = rest;
 
-},{"./_apply":26,"./toInteger":168}],165:[function(require,module,exports){
+},{"./_apply":26,"./toInteger":169}],166:[function(require,module,exports){
 var baseCastPath = require('./_baseCastPath'),
     get = require('./get'),
     isFunction = require('./isFunction'),
@@ -5238,7 +5317,7 @@ function result(object, path, defaultValue) {
 
 module.exports = result;
 
-},{"./_baseCastPath":42,"./_isKey":100,"./_parent":112,"./get":136,"./isFunction":145}],166:[function(require,module,exports){
+},{"./_baseCastPath":42,"./_isKey":100,"./_parent":112,"./get":136,"./isFunction":145}],167:[function(require,module,exports){
 var assignInDefaults = require('./_assignInDefaults'),
     assignInWith = require('./assignInWith'),
     attempt = require('./attempt'),
@@ -5466,7 +5545,7 @@ function template(string, options, guard) {
 
 module.exports = template;
 
-},{"./_assignInDefaults":33,"./_baseValues":68,"./_escapeStringChar":85,"./_isIterateeCall":99,"./_reInterpolate":115,"./assignInWith":126,"./attempt":128,"./isError":144,"./keys":156,"./templateSettings":167,"./toString":171}],167:[function(require,module,exports){
+},{"./_assignInDefaults":33,"./_baseValues":68,"./_escapeStringChar":85,"./_isIterateeCall":99,"./_reInterpolate":115,"./assignInWith":126,"./attempt":128,"./isError":144,"./keys":156,"./templateSettings":168,"./toString":172}],168:[function(require,module,exports){
 var escape = require('./escape'),
     reEscape = require('./_reEscape'),
     reEvaluate = require('./_reEvaluate'),
@@ -5535,7 +5614,7 @@ var templateSettings = {
 
 module.exports = templateSettings;
 
-},{"./_reEscape":113,"./_reEvaluate":114,"./_reInterpolate":115,"./escape":133}],168:[function(require,module,exports){
+},{"./_reEscape":113,"./_reEvaluate":114,"./_reInterpolate":115,"./escape":133}],169:[function(require,module,exports){
 var toNumber = require('./toNumber');
 
 /** Used as references for various `Number` constants. */
@@ -5581,7 +5660,7 @@ function toInteger(value) {
 
 module.exports = toInteger;
 
-},{"./toNumber":169}],169:[function(require,module,exports){
+},{"./toNumber":170}],170:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isObject = require('./isObject');
 
@@ -5642,7 +5721,7 @@ function toNumber(value) {
 
 module.exports = toNumber;
 
-},{"./isFunction":145,"./isObject":148}],170:[function(require,module,exports){
+},{"./isFunction":145,"./isObject":148}],171:[function(require,module,exports){
 var baseToPairs = require('./_baseToPairs'),
     keys = require('./keys');
 
@@ -5673,7 +5752,7 @@ function toPairs(object) {
 
 module.exports = toPairs;
 
-},{"./_baseToPairs":65,"./keys":156}],171:[function(require,module,exports){
+},{"./_baseToPairs":65,"./keys":156}],172:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     isSymbol = require('./isSymbol');
 
@@ -5721,7 +5800,7 @@ function toString(value) {
 
 module.exports = toString;
 
-},{"./_Symbol":23,"./isSymbol":153}],172:[function(require,module,exports){
+},{"./_Symbol":23,"./isSymbol":153}],173:[function(require,module,exports){
 var charsEndIndex = require('./_charsEndIndex'),
     charsStartIndex = require('./_charsStartIndex'),
     stringToArray = require('./_stringToArray'),
@@ -5773,7 +5852,7 @@ function trim(string, chars, guard) {
 
 module.exports = trim;
 
-},{"./_charsEndIndex":71,"./_charsStartIndex":72,"./_stringToArray":124,"./toString":171}],173:[function(require,module,exports){
+},{"./_charsEndIndex":71,"./_charsStartIndex":72,"./_stringToArray":124,"./toString":172}],174:[function(require,module,exports){
 var isObject = require('./isObject'),
     isRegExp = require('./isRegExp'),
     stringSize = require('./_stringSize'),
@@ -5894,7 +5973,7 @@ function truncate(string, options) {
 
 module.exports = truncate;
 
-},{"./_stringSize":123,"./_stringToArray":124,"./isObject":148,"./isRegExp":151,"./toInteger":168,"./toString":171}],174:[function(require,module,exports){
+},{"./_stringSize":123,"./_stringToArray":124,"./isObject":148,"./isRegExp":151,"./toInteger":169,"./toString":172}],175:[function(require,module,exports){
 var baseIteratee = require('./_baseIteratee'),
     baseUniq = require('./_baseUniq');
 
@@ -5926,7 +6005,7 @@ function uniqBy(array, iteratee) {
 
 module.exports = uniqBy;
 
-},{"./_baseIteratee":55,"./_baseUniq":67}],175:[function(require,module,exports){
+},{"./_baseIteratee":55,"./_baseUniq":67}],176:[function(require,module,exports){
 var baseDifference = require('./_baseDifference'),
     isArrayLikeObject = require('./isArrayLikeObject'),
     rest = require('./rest');
@@ -5955,4 +6034,433 @@ var without = rest(function(array, values) {
 
 module.exports = without;
 
-},{"./_baseDifference":44,"./isArrayLikeObject":142,"./rest":164}]},{},[15]);
+},{"./_baseDifference":44,"./isArrayLikeObject":142,"./rest":165}],177:[function(require,module,exports){
+/**
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+(function (root, factory) {
+    "use strict";
+
+    if (typeof define === 'function' && define.amd) {
+        define([], factory);
+    }
+    else if (typeof module === 'object' && module.exports) {
+        module.exports = factory();
+    }
+    else {
+        root.picoModal = factory();
+    }
+}(this, function () {
+
+    /**
+     * A self-contained modal library
+     */
+    "use strict";
+
+    /** Returns whether a value is a dom node */
+    function isNode(value) {
+        if ( typeof Node === "object" ) {
+            return value instanceof Node;
+        }
+        else {
+            return value &&
+                typeof value === "object" &&
+                typeof value.nodeType === "number";
+        }
+    }
+
+    /** Returns whether a value is a string */
+    function isString(value) {
+        return typeof value === "string";
+    }
+
+    /**
+     * Generates observable objects that can be watched and triggered
+     */
+    function observable() {
+        var callbacks = [];
+        return {
+            watch: callbacks.push.bind(callbacks),
+            trigger: function( modal ) {
+
+                var unprevented = true;
+                var event = {
+                    preventDefault: function preventDefault () {
+                        unprevented = false;
+                    }
+                };
+
+                for (var i = 0; i < callbacks.length; i++) {
+                    callbacks[i](modal, event);
+                }
+
+                return unprevented;
+            }
+        };
+    }
+
+
+    /**
+     * A small interface for creating and managing a dom element
+     */
+    function Elem( elem ) {
+        this.elem = elem;
+    }
+
+    /**
+     * Creates a new div
+     */
+    Elem.div = function ( parent ) {
+        if ( typeof parent === "string" ) {
+            parent = document.querySelector(parent);
+        }
+        var elem = document.createElement('div');
+        (parent || document.body).appendChild(elem);
+        return new Elem(elem);
+    };
+
+    Elem.prototype = {
+
+        /** Creates a child of this node */
+        child: function () {
+            return Elem.div(this.elem);
+        },
+
+        /** Applies a set of styles to an element */
+        stylize: function(styles) {
+            styles = styles || {};
+
+            if ( typeof styles.opacity !== "undefined" ) {
+                styles.filter =
+                    "alpha(opacity=" + (styles.opacity * 100) + ")";
+            }
+
+            for (var prop in styles) {
+                if (styles.hasOwnProperty(prop)) {
+                    this.elem.style[prop] = styles[prop];
+                }
+            }
+
+            return this;
+        },
+
+        /** Adds a class name */
+        clazz: function (clazz) {
+            this.elem.className += " " + clazz;
+            return this;
+        },
+
+        /** Sets the HTML */
+        html: function (content) {
+            if ( isNode(content) ) {
+                this.elem.appendChild( content );
+            }
+            else {
+                this.elem.innerHTML = content;
+            }
+            return this;
+        },
+
+        /** Adds a click handler to this element */
+        onClick: function(callback) {
+            this.elem.addEventListener('click', callback);
+            return this;
+        },
+
+        /** Removes this element from the DOM */
+        destroy: function() {
+            this.elem.parentNode.removeChild(this.elem);
+        },
+
+        /** Hides this element */
+        hide: function() {
+            this.elem.style.display = "none";
+        },
+
+        /** Shows this element */
+        show: function() {
+            this.elem.style.display = "block";
+        },
+
+        /** Sets an attribute on this element */
+        attr: function ( name, value ) {
+            this.elem.setAttribute(name, value);
+            return this;
+        },
+
+        /** Executes a callback on all the ancestors of an element */
+        anyAncestor: function ( predicate ) {
+            var elem = this.elem;
+            while ( elem ) {
+                if ( predicate( new Elem(elem) ) ) {
+                    return true;
+                }
+                else {
+                    elem = elem.parentNode;
+                }
+            }
+            return false;
+        }
+    };
+
+
+    /** Generates the grey-out effect */
+    function buildOverlay( getOption, close ) {
+        return Elem.div( getOption("parent") )
+            .clazz("pico-overlay")
+            .clazz( getOption("overlayClass", "") )
+            .stylize({
+                display: "none",
+                position: "fixed",
+                top: "0px",
+                left: "0px",
+                height: "100%",
+                width: "100%",
+                zIndex: 10000
+            })
+            .stylize(getOption('overlayStyles', {
+                opacity: 0.5,
+                background: "#000"
+            }))
+            .onClick(function () {
+                if ( getOption('overlayClose', true) ) {
+                    close();
+                }
+            });
+    }
+
+    /** Builds the content of a modal */
+    function buildModal( getOption, close ) {
+        var width = getOption('width', 'auto');
+        if ( typeof width === "number" ) {
+            width = "" + width + "px";
+        }
+
+        var elem = Elem.div( getOption("parent") )
+            .clazz("pico-content")
+            .clazz( getOption("modalClass", "") )
+            .stylize({
+                display: 'none',
+                position: 'fixed',
+                zIndex: 10001,
+                left: "50%",
+                top: "50px",
+                width: width,
+                '-ms-transform': 'translateX(-50%)',
+                '-moz-transform': 'translateX(-50%)',
+                '-webkit-transform': 'translateX(-50%)',
+                '-o-transform': 'translateX(-50%)',
+                'transform': 'translateX(-50%)'
+            })
+            .stylize(getOption('modalStyles', {
+                backgroundColor: "white",
+                padding: "20px",
+                borderRadius: "5px"
+            }))
+            .html( getOption('content') )
+            .attr("role", "dialog")
+            .onClick(function (event) {
+                var isCloseClick = new Elem(event.target)
+                    .anyAncestor(function (elem) {
+                        return /\bpico-close\b/.test(elem.elem.className);
+                    });
+                if ( isCloseClick ) {
+                    close();
+                }
+            });
+
+        return elem;
+    }
+
+    /** Builds the close button */
+    function buildClose ( elem, getOption ) {
+        if ( getOption('closeButton', true) ) {
+            return elem.child()
+                .html( getOption('closeHtml', "&#xD7;") )
+                .clazz("pico-close")
+                .clazz( getOption("closeClass", "") )
+                .stylize( getOption('closeStyles', {
+                    borderRadius: "2px",
+                    cursor: "pointer",
+                    height: "15px",
+                    width: "15px",
+                    position: "absolute",
+                    top: "5px",
+                    right: "5px",
+                    fontSize: "16px",
+                    textAlign: "center",
+                    lineHeight: "15px",
+                    background: "#CCC"
+                }) );
+        }
+    }
+
+    /** Builds a method that calls a method and returns an element */
+    function buildElemAccessor( builder ) {
+        return function () {
+            return builder().elem;
+        };
+    }
+
+
+    /**
+     * Displays a modal
+     */
+    return function picoModal(options) {
+
+        if ( isString(options) || isNode(options) ) {
+            options = { content: options };
+        }
+
+        var afterCreateEvent = observable();
+        var beforeShowEvent = observable();
+        var afterShowEvent = observable();
+        var beforeCloseEvent = observable();
+        var afterCloseEvent = observable();
+
+        /**
+         * Returns a named option if it has been explicitly defined. Otherwise,
+         * it returns the given default value
+         */
+        function getOption ( opt, defaultValue ) {
+            var value = options[opt];
+            if ( typeof value === "function" ) {
+                value = value( defaultValue );
+            }
+            return value === undefined ? defaultValue : value;
+        }
+
+        /** Hides this modal */
+        function forceClose () {
+            shadowElem().hide();
+            modalElem().hide();
+            afterCloseEvent.trigger(iface);
+        }
+
+        /** Gracefully hides this modal */
+        function close () {
+            if ( beforeCloseEvent.trigger(iface) ) {
+                forceClose();
+            }
+        }
+
+        /** Wraps a method so it returns the modal interface */
+        function returnIface ( callback ) {
+            return function () {
+                callback.apply(this, arguments);
+                return iface;
+            };
+        }
+
+
+        // The constructed dom nodes
+        var built;
+
+        /** Builds a method that calls a method and returns an element */
+        function build ( name ) {
+            if ( !built ) {
+                var modal = buildModal(getOption, close);
+                built = {
+                    modal: modal,
+                    overlay: buildOverlay(getOption, close),
+                    close: buildClose(modal, getOption)
+                };
+                afterCreateEvent.trigger(iface);
+            }
+            return built[name];
+        }
+
+        var modalElem = build.bind(window, 'modal');
+        var shadowElem = build.bind(window, 'overlay');
+        var closeElem = build.bind(window, 'close');
+
+
+        var iface = {
+
+            /** Returns the wrapping modal element */
+            modalElem: buildElemAccessor(modalElem),
+
+            /** Returns the close button element */
+            closeElem: buildElemAccessor(closeElem),
+
+            /** Returns the overlay element */
+            overlayElem: buildElemAccessor(shadowElem),
+
+            /** Builds the dom without showing the modal */
+            buildDom: returnIface(build),
+
+            /** Shows this modal */
+            show: function () {
+                if ( beforeShowEvent.trigger(iface) ) {
+                    shadowElem().show();
+                    closeElem();
+                    modalElem().show();
+                    afterShowEvent.trigger(iface);
+                }
+                return this;
+            },
+
+            /** Hides this modal */
+            close: returnIface(close),
+
+            /**
+             * Force closes this modal. This will not call beforeClose
+             * events and will just immediately hide the modal
+             */
+            forceClose: returnIface(forceClose),
+
+            /** Destroys this modal */
+            destroy: function () {
+                modalElem = modalElem().destroy();
+                shadowElem = shadowElem().destroy();
+                closeElem = undefined;
+            },
+
+            /**
+             * Updates the options for this modal. This will only let you
+             * change options that are re-evaluted regularly, such as
+             * `overlayClose`.
+             */
+            options: function ( opts ) {
+                options = opts;
+            },
+
+            /** Executes after the DOM nodes are created */
+            afterCreate: returnIface(afterCreateEvent.watch),
+
+            /** Executes a callback before this modal is closed */
+            beforeShow: returnIface(beforeShowEvent.watch),
+
+            /** Executes a callback after this modal is shown */
+            afterShow: returnIface(afterShowEvent.watch),
+
+            /** Executes a callback before this modal is closed */
+            beforeClose: returnIface(beforeCloseEvent.watch),
+
+            /** Executes a callback after this modal is closed */
+            afterClose: returnIface(afterCloseEvent.watch)
+        };
+
+        return iface;
+    };
+
+}));
+
+},{}]},{},[15]);

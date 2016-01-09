@@ -40,6 +40,7 @@ RecipeList.prototype.render = function(term) {
         var card = new RecipeCard({
           el: document.createElement('div')
         });
+        card.el.setAttribute('data-filter-item', true);
         card.render(recipe);
         this.append(card.el);
       }.bind(this));

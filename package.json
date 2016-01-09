@@ -23,6 +23,7 @@
     "es6-promise": "^3.0.2",
     "lodash": "^4.6.1",
     "lodash-migrate": "^0.2.11",
+    "picomodal": "^2.3.0",
     "whatwg-fetch": "^0.10.1"
   },
   "devDependencies": {

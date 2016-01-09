@@ -4,6 +4,8 @@ var defaults = require('lodash/defaults');
 var forEach = require('lodash/each');
 var pad = require('lodash/pad');
 var truncate = require('lodash/truncate');
+var parseInt = require('lodash/parseInt');
+var picoModal = require('picomodal/src/picoModal');
 
 //
 // Constructor for the recipe card
@@ -26,16 +28,21 @@ RecipeCard.prototype = create(BaseComponent.prototype, {
   templateImports: {
     pad: pad,
     truncate: truncate
-  }
+  },
+
+  //
+  // Events for the component
+  //
+  events: {
+    'click': ['showMoreDetails', '.card-view-more']
+  },
+
+  //
+  // Modal instance property
+  //
+  modal: null
 
 });
-
-//
-// Override the init() method
-//
-RecipeCard.prototype.init = function(config) {
-  // This will connect events to view recipe details onclick
-};
 
 //
 // Override the getTemplate() method
@@ -57,6 +64,27 @@ RecipeCard.prototype.render = function(data) {
     frag.appendChild(span);
   });
   this.el.querySelector('.tags').appendChild(frag);
+};
+
+//
+// Show the recipe details
+//
+RecipeCard.prototype.showMoreDetails = function(ev) {
+  var recipeId = parseInt(this.el.querySelector('.recipe-card').dataset.recipeId);
+  window.fetch('http://127.0.0.1:3000/recipes/' + recipeId)
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(recipe) {
+      // Create the modal for the first time
+      if (!this.modal) {
+        this.modal = picoModal({
+          content: "This needs to be a call to rendering a template.",
+          closeButton: false
+        });
+      }
+      this.modal.show();
+    }.bind(this));
 };
 
 module.exports = RecipeCard;
