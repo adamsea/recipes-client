@@ -3,6 +3,7 @@ var create = require('lodash/create');
 var defaults = require('lodash/defaults');
 var forEach = require('lodash/each');
 var pad = require('lodash/pad');
+var template = require('lodash/template');
 var truncate = require('lodash/truncate');
 var parseInt = require('lodash/parseInt');
 var picoModal = require('picomodal/src/picoModal');
@@ -26,6 +27,7 @@ RecipeCard.prototype = create(BaseComponent.prototype, {
   // Add lodash functions here to use them in templates
   //
   templateImports: {
+    forEach: forEach,
     pad: pad,
     truncate: truncate
   },
@@ -45,6 +47,17 @@ RecipeCard.prototype = create(BaseComponent.prototype, {
 });
 
 //
+// Initialization for the component
+// Sets the template to use for rendering recipe details to the modal
+//
+RecipeCard.prototype.init = function(config) {
+  this.detailsTemplate = template(require('./details.html'), {
+    imports: this.templateImports
+  });
+  return BaseComponent.prototype.init.call(this, config);
+}
+
+//
 // Override the getTemplate() method
 //
 RecipeCard.prototype.getTemplate = function() {
@@ -55,15 +68,7 @@ RecipeCard.prototype.getTemplate = function() {
 // Override the render() method
 //
 RecipeCard.prototype.render = function(data) {
-  var frag = document.createDocumentFragment();
   this.el.innerHTML = this.template(defaults(data, { image: null }));
-  forEach(data.tags, function(tag) {
-    var span = document.createElement('span');
-    span.className = 'label label-default tag';
-    span.textContent = tag.title;
-    frag.appendChild(span);
-  });
-  this.el.querySelector('.tags').appendChild(frag);
 };
 
 //
@@ -79,7 +84,7 @@ RecipeCard.prototype.showMoreDetails = function(ev) {
       // Create the modal for the first time
       if (!this.modal) {
         this.modal = picoModal({
-          content: "This needs to be a call to rendering a template.",
+          content: this.detailsTemplate(defaults(recipe, { image: null })),
           closeButton: false
         });
       }

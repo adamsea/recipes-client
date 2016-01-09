@@ -1,0 +1,29 @@
+<div class="modal recipe-details">
+  <div class="modal-title">
+    <h1><%= title %></h1>
+    <% if (image) { %>
+      <div class="modal-image">
+        <img src="<%= image %>" alt="<%= title %>">
+      </div>
+    <% } %>
+  </div>
+
+  <div class="modal-content">
+    <p>
+      <%- description %>
+      <cite class="small"><%= pad('- posted by', 12) + user.username %></cite>
+    </p>
+
+    <h5>Ingredients</h5>
+    <ul class="list-flat">
+      <% forEach(ingredients, function(i) { %>
+        <li><%= i.title %></li>
+      <% }); %>
+    </ul>
+
+    <h5>Tags</h5>
+    <% forEach(tags, function(t) { %>
+      <span class="label label-default tag"><%= t.title %></span>
+    <% }); %>
+  </div>
+</div>
