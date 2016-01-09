@@ -1,7 +1,9 @@
 var BaseComponent = require('../../base');
 var create = require('lodash/create');
+var defaults = require('lodash/defaults');
 var forEach = require('lodash/each');
 var pad = require('lodash/pad');
+var truncate = require('lodash/truncate');
 
 //
 // Constructor for the recipe card
@@ -22,7 +24,8 @@ RecipeCard.prototype = create(BaseComponent.prototype, {
   // Add lodash functions here to use them in templates
   //
   templateImports: {
-    pad: pad
+    pad: pad,
+    truncate: truncate
   }
 
 });
@@ -46,7 +49,7 @@ RecipeCard.prototype.getTemplate = function() {
 //
 RecipeCard.prototype.render = function(data) {
   var frag = document.createDocumentFragment();
-  this.el.innerHTML = this.template(data);
+  this.el.innerHTML = this.template(defaults(data, { image: null }));
   forEach(data.tags, function(tag) {
     var span = document.createElement('span');
     span.className = 'label label-default tag';

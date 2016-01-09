@@ -74,6 +74,7 @@ RecipeForm.prototype.createRecipe = function(ev) {
   var form = this.el.querySelector('form');
   var title = form.elements.title.value.trim();
   var description = form.elements.description.value.trim();
+  var image = form.elements.image.value.trim();
   var tags = form.elements.tags.value.trim();
   tags = tags && tags.split(/,/) || [];
 
@@ -87,6 +88,7 @@ RecipeForm.prototype.createRecipe = function(ev) {
       body: JSON.stringify({
         title: title,
         description: description,
+        image: image,
         tags: uniqBy(tags, function(tag) {
           return tag.toLowerCase();
         })

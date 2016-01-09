@@ -1,10 +1,13 @@
 <div class="card recipe-card" data-filter-item>
   <div class="card-title">
+    <% if (image) { %>
+      <img src="<%= image %>" alt="<%= title %>">
+    <% } %>
     <h3><%= title %></h3>
   </div>
 
   <div class="card-content">
-    <p><%- description %></p>
+    <p><%- truncate(description, 60) %></p>
     <p class="small"><%= pad('posted by', 10) %><span data-filter-text><%= user.username %></span></p>
     <p class="tags"></p>
   </div>
