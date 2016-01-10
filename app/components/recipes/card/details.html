@@ -11,8 +11,27 @@
   <div class="modal-content">
     <p>
       <%- description %>
-      <cite class="small"><%= pad('- posted by', 12) + user.username %></cite>
+      <cite class="small">
+        <a class="recipe-user" href="#"><%= pad('- posted by', 12) + user.username %></a>
+      </cite>
     </p>
+
+    <div class="modal-content-user">
+      <a class="right close-user" href="#">Close &times;</a>
+      <h5>
+        <img src="<%= user.image %>" alt="<%= user.username %>">
+        About <%= user.username %>
+      </h5>
+      <div>
+        <strong>Name:</strong>
+        <%= capitalize(user.first_name.toLowerCase()) %> <%= capitalize(user.last_name.toLowerCase()) %>
+      </div>
+      <div>
+        <strong>Email:</strong>
+        <%= user.email %>
+      </div>
+      <p>Contact <a href="mailto:<%= user.email %>"><%= user.username %></a></p>
+    </div>
 
     <h5>Ingredients</h5>
     <ul class="list-flat">

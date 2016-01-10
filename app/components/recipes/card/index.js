@@ -2,6 +2,8 @@ var BaseComponent = require('../../base');
 var create = require('lodash/create');
 var defaults = require('lodash/defaults');
 var forEach = require('lodash/each');
+var filter = require('lodash/filter');
+var capitalize = require('lodash/capitalize');
 var pad = require('lodash/pad');
 var template = require('lodash/template');
 var truncate = require('lodash/truncate');
@@ -27,6 +29,7 @@ RecipeCard.prototype = create(BaseComponent.prototype, {
   // Add lodash functions here to use them in templates
   //
   templateImports: {
+    capitalize: capitalize,
     forEach: forEach,
     pad: pad,
     truncate: truncate
@@ -87,9 +90,31 @@ RecipeCard.prototype.showMoreDetails = function(ev) {
           content: this.detailsTemplate(defaults(recipe, { image: null })),
           closeButton: false
         });
+        this.modal.modalElem().addEventListener('click', this.showUserDetails.bind(this));
       }
       this.modal.show();
     }.bind(this));
 };
+
+//
+// Show or hide user details
+//
+RecipeCard.prototype.showUserDetails = function(ev) {
+  var userElem;
+  var modalElem = this.modal.modalElem();
+  if (ev.target.className.indexOf('recipe-user') !== -1) {
+    ev.preventDefault();
+    userElem = modalElem.querySelector('.modal-content-user');
+    userElem.className = userElem.className.split(' ').concat(['active']).join(' ');
+    return;
+  }
+  if (ev.target.className.indexOf('close-user') !== -1) {
+    ev.preventDefault();
+    userElem = modalElem.querySelector('.modal-content-user');
+    userElem.className = filter(userElem.className.split(' '), function(className) {
+      return className !== 'active';
+    }).join(' ');
+  }
+}
 
 module.exports = RecipeCard;
