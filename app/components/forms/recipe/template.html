@@ -1,23 +1,29 @@
 <form method="post" action="" class="forms">
   <fieldset>
     <legend>New Recipe</legend>
-    <section>
-      <input class="width-6" maxlength="50" name="title" placeholder="Title (max 50 characters)" type="text" required>
-    </section>
-    <section>
-      <textarea maxlength="250" name="description" placeholder="Description (max 250 characters)" rows="5"></textarea>
-    </section>
-    <section>
-      <input class="width-12" maxlength="250" name="image" placeholder="Image URL (max 250 characters)" type="text">
-    </section>
-    <section>
-      <input type="text" maxlength="50" name="tagsinput" placeholder="Add Tag and Press Enter">
-      <input type="hidden" name="tags">
-      <div class="recipe-labels">
-      </div>
-    </section>
-    <section>
-      <button type="submit" round>Add Recipe</button>
-    </section>
+    <% if (isLoggedIn) { %>
+      <section>
+        <input class="width-6" maxlength="50" name="title" placeholder="Title (max 50 characters)" type="text" required>
+      </section>
+      <section>
+        <textarea maxlength="250" name="description" placeholder="Description (max 250 characters)" rows="5"></textarea>
+      </section>
+      <section>
+        <input class="width-12" maxlength="250" name="image" placeholder="Image URL (max 250 characters)" type="text">
+      </section>
+      <section>
+        <input type="text" maxlength="50" name="tagsinput" placeholder="Add Tag and Press Enter">
+        <input type="hidden" name="tags">
+        <div class="recipe-labels">
+        </div>
+      </section>
+      <section>
+        <button type="submit" round>Add Recipe</button>
+      </section>
+    <% } else { %>
+      <section>
+        <p>You must login first to be able to add a new recipe.</p>
+      </section>
+    <% } %>
   </fieldset>
 </form>

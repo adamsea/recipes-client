@@ -2,6 +2,9 @@ var BaseComponent = require('../../base');
 var create = require('lodash/create');
 var uniqBy = require('lodash/uniqBy');
 var without = require('lodash/without');
+var assign = require('lodash/assign');
+var attempt = require('lodash/attempt');
+var isError = require('lodash/isError');
 
 //
 // Constructor for the modal form component
@@ -114,15 +117,21 @@ RecipeForm.prototype.getTemplate = function() {
 // Override the render() method
 //
 RecipeForm.prototype.render = function(data) {
-  this.el.innerHTML = this.template(data);
-  this.el.querySelector('input[name="tagsinput"]').addEventListener('keypress', function(ev) {
-    var tag = ev.target.value.trim();
-    if (ev.keyCode === 13 && tag !== '') {
-      ev.preventDefault();
-      this.addTag(tag);
-      this.el.querySelector('input[name="tagsinput"]').value = '';
-    }
-  }.bind(this), false);
+  var token = attempt(sessionStorage.getItem.bind(sessionStorage), 'token');
+  var isLoggedIn = token && !isError(token);
+  this.el.innerHTML = this.template(assign(data || {}, {
+    isLoggedIn: isLoggedIn
+  }));
+  if (isLoggedIn) {
+    this.el.querySelector('input[name="tagsinput"]').addEventListener('keypress', function(ev) {
+      var tag = ev.target.value.trim();
+      if (ev.keyCode === 13 && tag !== '') {
+        ev.preventDefault();
+        this.addTag(tag);
+        this.el.querySelector('input[name="tagsinput"]').value = '';
+      }
+    }.bind(this), false);
+  }
 };
 
 module.exports = RecipeForm;
