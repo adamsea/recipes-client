@@ -48,3 +48,9 @@ var recipeForm = new RecipeForm({
   }
 });
 recipeForm.render();
+
+var LoginForm = require('./components/forms/login');
+var loginForm = new LoginForm({
+  el: '.login-form'
+});
+loginForm.render();
