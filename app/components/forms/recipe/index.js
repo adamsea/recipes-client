@@ -23,10 +23,76 @@ RecipeForm.prototype = create(BaseComponent.prototype, {
   constructor: RecipeForm,
 
   events: {
-    'submit': ['createRecipe']
+    'submit': ['createRecipe'],
+    'click': ['addIngredient', '.add-ingredient']
   }
 
 });
+
+//
+// Add an ingredient to the list
+//
+RecipeForm.prototype.addIngredient = function(ev) {
+  ev.preventDefault();
+  var form = this.el.querySelector('form');
+  var ingredient = trim(form.elements.ingredient_title.value.toLowerCase());
+  var amount = trim(form.elements.ingredient_amount.value);
+  var unit = trim(form.elements.ingredient_unit.value);
+
+  this.addIngredientLabel(ingredient, amount, unit);
+};
+
+//
+// Add the label and set up handler to remove it
+//
+RecipeForm.prototype.addIngredientLabel = function(ingredient, amount, unit) {
+  var ingredientLabel = document.createElement('span');
+  var removeLabel = document.createElement('span');
+  var ingredientLabels = this.el.querySelector('.recipe-ingredients');
+  var recipeIngredients = this.el.querySelector('input[name="ingredients"]');
+
+  // Add to our hidden form field
+  var ingredients = [];
+  if (trim(recipeIngredients.value)) {
+    ingredients = JSON.parse(trim(recipeIngredients.value));
+  }
+  ingredients.push({
+    title: ingredient,
+    amount: amount,
+    unit: unit
+  });
+  recipeIngredients.value = JSON.stringify(ingredients);
+
+  // Add to our display of recipe ingredients
+  ingredientLabel.textContent = ingredient + ': ' + amount + ' ' + unit;
+  ingredientLabel.className = 'label label-default';
+  removeLabel.innerHTML = '&#x2715;';
+  removeLabel.className = 'label-close';
+  ingredientLabel.appendChild(removeLabel);
+  ingredientLabels.appendChild(ingredientLabel);
+
+  // Remove an ingredient on click
+  removeLabel.addEventListener('click', this.removeIngredient.bind(this, ingredientLabel, ingredient, amount, unit), false);
+};
+
+//
+// Remove an ingredient from the list
+//
+RecipeForm.prototype.removeIngredient = function(ingredientLabel, ingredient, amount, unit) {
+  var recipeIngredients = this.el.querySelector('input[name="ingredients"]');
+
+  // Remove from our hidden form field
+  var ingredients = JSON.parse(recipeIngredients.value);
+  remove(ingredients, {
+    title: ingredient,
+    amount: amount,
+    unit: unit
+  });
+  recipeIngredients.value = JSON.stringify(ingredients);
+
+  // Remove from our display of ingredients
+  this.el.querySelector('.recipe-ingredients').removeChild(ingredientLabel);
+};
 
 //
 // Add a tag to the list
