@@ -18,6 +18,30 @@
         </div>
       </section>
       <section>
+        <row end>
+          <column cols="4">
+            <input maxlength="50" name="ingredient_title" placeholder="Add Ingredient" type="text">
+          </column>
+          <column cols="2">
+            <input maxlength="2" min="1" max="99" name="ingredient_amount" type="number">
+          </column>
+          <column cols="3">
+            <select class="select" name="ingredient_unit">
+              <option value="teaspoons">Teaspoons</option>
+              <option value="tablespoons">Tablespoons</option>
+              <option value="cups">Cups</option>
+              <option value="quarts">Quarts</option>
+            </select>
+          </column>
+          <column cols="3">
+            <button type="button" class="add-ingredient" round>Add Ingredient</button>
+          </column>
+        </row>
+        <input type="hidden" name="ingredients">
+        <div class="recipe-ingredients">
+        </div>
+      </section>
+      <section>
         <button type="submit" round>Add Recipe</button>
       </section>
     <% } else { %>

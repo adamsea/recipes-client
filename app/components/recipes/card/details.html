@@ -36,7 +36,7 @@
     <h5>Ingredients</h5>
     <ul class="list-flat">
       <% forEach(ingredients, function(i) { %>
-        <li><%= i.title %></li>
+        <li><%= i.title %> <em class="soft-muted">- <%= i.amount + ' ' + i.unit %></em></li>
       <% }); %>
     </ul>
 

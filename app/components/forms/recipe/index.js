@@ -5,6 +5,8 @@ var without = require('lodash/without');
 var assign = require('lodash/assign');
 var attempt = require('lodash/attempt');
 var isError = require('lodash/isError');
+var remove = require('lodash/remove');
+var trim = require('lodash/trim');
 
 //
 // Constructor for the modal form component
@@ -37,8 +39,8 @@ RecipeForm.prototype.addTag = function(tag) {
 
   // Add to our hidden form field
   var tags = [];
-  if (recipeTags.value.trim()) {
-    tags = recipeTags.value.trim().split(/,/);
+  if (trim(recipeTags.value)) {
+    tags = trim(recipeTags.value).split(/,/);
   }
   tags.push(tag);
   recipeTags.value = tags.join(',');
@@ -62,7 +64,7 @@ RecipeForm.prototype.removeTag = function(recipeLabel, tag) {
   var recipeTags = this.el.querySelector('input[name="tags"]');
 
   // Remove from our hidden form field
-  var tags = without(recipeTags.value.trim().split(/,/), tag);
+  var tags = without(trim(recipeTags.value).split(/,/), tag);
   recipeTags.value = tags.join(',');
 
   // Remove from our display of tags
@@ -75,10 +77,11 @@ RecipeForm.prototype.removeTag = function(recipeLabel, tag) {
 RecipeForm.prototype.createRecipe = function(ev) {
   ev.preventDefault();
   var form = this.el.querySelector('form');
-  var title = form.elements.title.value.trim();
-  var description = form.elements.description.value.trim();
-  var image = form.elements.image.value.trim();
-  var tags = form.elements.tags.value.trim();
+  var title = trim(form.elements.title.value);
+  var description = trim(form.elements.description.value);
+  var image = trim(form.elements.image.value);
+  var tags = trim(form.elements.tags.value);
+  var ingredients = attempt(JSON.parse, trim(form.elements.ingredients.value));
   tags = tags && tags.split(/,/) || [];
 
   if (title && description) {
@@ -86,6 +89,7 @@ RecipeForm.prototype.createRecipe = function(ev) {
       method: 'post',
       headers: {
         'Accept': 'application/json',
+        'Authorization': 'Client ' + sessionStorage.getItem('token'),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -94,7 +98,10 @@ RecipeForm.prototype.createRecipe = function(ev) {
         image: image,
         tags: uniqBy(tags, function(tag) {
           return tag.toLowerCase();
-        })
+        }),
+        ingredients: !isError(ingredients) && uniqBy(ingredients, function(ingredient) {
+          return ingredient.title;
+        }) || []
       })
     })
     .then(function(response) {
@@ -124,7 +131,7 @@ RecipeForm.prototype.render = function(data) {
   }));
   if (isLoggedIn) {
     this.el.querySelector('input[name="tagsinput"]').addEventListener('keypress', function(ev) {
-      var tag = ev.target.value.trim();
+      var tag = trim(ev.target.value);
       if (ev.keyCode === 13 && tag !== '') {
         ev.preventDefault();
         this.addTag(tag);
