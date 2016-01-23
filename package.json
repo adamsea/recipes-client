@@ -4,7 +4,9 @@
   "description": "The client-side for the recipes sample application.",
   "main": "assets/js/app.js",
   "scripts": {
-    "build": "browserify -t stringify app/main.js -o assets/js/app.js",
+    "prebuild": "browserify -t stringify app/main.js -o assets/js/app.js",
+    "build": "uglifyjs assets/js/app.js -c -o assets/js/app.min.js",
+    "postbuild": "htmlprocessor index.html -o index.html",
     "dev": "watchify -t stringify app/main.js -d -o assets/js/app.js -v",
     "start": "static -p 9000 .",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -27,7 +29,10 @@
     "whatwg-fetch": "^0.10.1"
   },
   "devDependencies": {
+    "browserify": "^13.0.0",
+    "htmlprocessor": "^0.2.0",
     "node-static": "^0.7.7",
-    "stringify": "^3.1.0"
+    "stringify": "^3.1.0",
+    "uglify-js": "^2.6.1"
   }
 }
