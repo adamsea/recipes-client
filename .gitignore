@@ -2,4 +2,3 @@ node_modules
 .vscode
 *.map
 npm-debug.log
-assets/js/app.min.js
