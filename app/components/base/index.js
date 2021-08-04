@@ -1,10 +1,12 @@
-var assignWith = require('lodash/assignWith');
-var forEach = require('lodash/each');
-var isArray = require('lodash/isArray');
-var isElement = require('lodash/isElement');
-var isString = require('lodash/isString');
-var isUndefined = require('lodash/isUndefined');
-var template = require('lodash/template');
+let assignWith = require('lodash/assignWith');
+let defer = require('lodash/defer');
+let forEach = require('lodash/each');
+let isArray = require('lodash/isArray');
+let isElement = require('lodash/isElement');
+let isEqual = require('lodash/isEqual');
+let isString = require('lodash/isString');
+let isUndefined = require('lodash/isUndefined');
+let template = require('lodash/template');
 
 //
 // Constructor for the component.
@@ -12,18 +14,35 @@ var template = require('lodash/template');
 // and call any initialization logic for the component.
 //
 function BaseComponent(config) {
-  // Set root element and html
-  this.el = isElement(config.el) && config.el || document.querySelector(config.el);
+  //
+  // The element is being created in the component
+  // or provided to the component - we will leave it
+  // to the code to know how events are bound
+  //
+  if (isElement(config.el)) {
+    this.el = config.el;
+  }
+  //
+  // The element is already in the document
+  // and may have events previously bound,
+  // so we'll make a copy of the node to drop events.
+  //
+  else {
+    let docEl = document.querySelector(config.el);
+    let newEl = docEl.cloneNode(true);
+    docEl.replaceWith(newEl);
+    this.el = newEl;
+  }
 
   // Set compiled template
-  var settings = {};
+  let settings = {};
   if (this.templateImports) {
     settings.imports = this.templateImports;
   }
   this.template = template(this.getTemplate(), settings);
 
   // Set event listeners
-  this.events = assignWith(this.events || {}, config.events, function(value, source, key) {
+  this.events = assignWith(this.events || {}, config.events, function(value, source) {
     if (value && source) {
       return [value, source];
     }
@@ -36,11 +55,16 @@ function BaseComponent(config) {
 }
 
 //
+// State object.
+//
+BaseComponent.prototype.state = {};
+
+//
 // Set up the component with a base config
 // Implement this method in your component do
 // any initializtion logic, etc.
 //
-BaseComponent.prototype.init = function(config) {
+BaseComponent.prototype.init = function() {
   // Override this method
 };
 
@@ -67,14 +91,13 @@ BaseComponent.prototype.addEventListeners = function() {
 // eventType: [handlerFunc, selector]
 //
 BaseComponent.prototype.addListener = function(params, eventType) {
-  var handlerFunc = params[0];
-  var selector = params[1];
+  let handlerFunc = params[0];
+  let selector = params[1];
 
   this.el.addEventListener(eventType, function(ev) {
-    var node;
     if (selector) {
-      node = this.el.querySelector(selector);
-      if (node !== ev.target) {
+      let node = ev.target.closest(selector)
+      if (!(node && this.el.contains(node))) {
         return true;
       }
     }
@@ -110,7 +133,7 @@ BaseComponent.prototype.remove = function(child) {
 // Render the component and its children.
 // Implement this method in your component.
 //
-BaseComponent.prototype.render = function(data) {
+BaseComponent.prototype.render = function() {
   // Override this method
 };
 
@@ -121,6 +144,22 @@ BaseComponent.prototype.clear = function() {
   while (this.el.hasChildNodes()) {
     this.el.removeChild(this.el.firstChild);
   }
-}
+};
+
+//
+// Re-render component based on state changes...
+//
+BaseComponent.prototype.setState = function(state = {}, cb) {
+  let currentState = {...this.state};
+  forEach(state, (value, key) => {
+    this.state[key] = value;
+  });
+  if (!isEqual(this.state, currentState)) {
+    this.render();
+  }
+  if (typeof cb === 'function') {
+    defer(cb);
+  }
+};
 
 module.exports = BaseComponent;
